@@ -15,13 +15,23 @@ const client = new Client({
   }
 });
 
+let lastQRGenerated = 0;
+
 // Tampilkan QR saat pertama kali login
 client.on('qr', async (qr) => {
+  const now = Date.now();
+  if (now - lastQRGenerated < 60000) {
+    console.log('⏳ QR skipped: Masih dalam cooldown.');
+    return;
+  }
+
+  lastQRGenerated = now;
+
   console.log('📲 Scan QR berikut di browser:');
 
   try {
     const qrImageUrl = await QRCode.toDataURL(qr);
-    console.log(qrImageUrl); // hasil base64 PNG, bisa dibuka di tab browser
+    console.log(qrImageUrl);
   } catch (err) {
     console.error('❌ Gagal generate QR:', err.message);
   }
