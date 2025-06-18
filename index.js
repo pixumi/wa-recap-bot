@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const QRcode = require('qrcode');
+const QRCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
 const appendToSheet = require('./sheets');
