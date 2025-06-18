@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
@@ -29,7 +30,7 @@ client.on('ready', async () => {
     }
   });
 
-  console.log('\n📌 Ganti allowedGroupId di bawah dengan ID grup kamu ↑\n');
+  console.log('\n📌 Pastikan ALLOWED_GROUP_ID sudah diatur di file .env\n');
 });
 
 // Listener pesan masuk
@@ -37,8 +38,8 @@ client.on('message', async msg => {
   const chat = await msg.getChat();
   if (!chat.isGroup) return;
 
-  // ✅ Ganti dengan ID grup kamu
-  const allowedGroupId = '6281549680498-1545037512@g.us';
+  // ID grup yang diperbolehkan (ambil dari environment)
+  const allowedGroupId = process.env.ALLOWED_GROUP_ID;
   if (chat.id._serialized !== allowedGroupId) return;
 
   const sender = msg.author || msg.from;
@@ -67,14 +68,18 @@ client.on('message', async msg => {
       pending.doneTime = formattedTime;
       pending.progressBy = sender;
 
-      appendToSheet([
-        pending.requester,
-        sender,
-        pending.requestTime,
-        formattedTime,
-        'https://bit.ly/RESPONSE_TIME',
-        pending.requestContent
-      ]);
+      try {
+        await appendToSheet([
+          pending.requester,
+          sender,
+          pending.requestTime,
+          formattedTime,
+          'https://bit.ly/RESPONSE_TIME',
+          pending.requestContent
+        ]);
+      } catch (error) {
+        console.error('❌ Error appendToSheet:', error);
+      }
     }
   } else {
     console.log(`📝 Request detected dari: ${sender}`);
@@ -87,14 +92,18 @@ client.on('message', async msg => {
       progressBy: ''
     });
 
-    appendToSheet([
-      sender,
-      '',
-      formattedTime,
-      '',
-      'https://bit.ly/RESPONSE_TIME',
-      content
-    ]);
+    try {
+      await appendToSheet([
+        sender,
+        '',
+        formattedTime,
+        '',
+        'https://bit.ly/RESPONSE_TIME',
+        content
+      ]);
+    } catch (error) {
+      console.error('❌ Error appendToSheet:', error);
+    }
   }
 
   // Simpan recap ke file lokal

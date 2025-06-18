@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { google } = require('googleapis');
 const credentials = require('./credentials.json');
 
@@ -7,8 +8,8 @@ const auth = new google.auth.GoogleAuth({
   scopes: SCOPES
 });
 
-// ✅ ID dari URL
-const SHEET_ID = '1uS0Z-pf-hZnUDrDwh8-39UE0zAUnPO_Xp79fD9uabLw';
+// ID Sheet diambil dari environment
+const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 const SHEET_NAME = 'Sheet1'; // atau ganti jika tab kamu bukan Sheet1
 
 async function appendToSheet(dataArray) {
