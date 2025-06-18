@@ -6,8 +6,10 @@ const path = require('path');
 const appendToSheet = require('./sheets');
 
 const RECAP_FILE = path.join(__dirname, 'recap.json');
+const QR_FILE = path.join(__dirname, 'qr.png');
 
-// Inisialisasi client WhatsApp dengan session tersimpan otomatis
+console.log('🚀 Memulai WhatsApp bot...');
+
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
@@ -17,7 +19,6 @@ const client = new Client({
 
 let lastQRGenerated = 0;
 
-// Tampilkan QR saat pertama kali login
 client.on('qr', async (qr) => {
   const now = Date.now();
   if (now - lastQRGenerated < 60000) {
@@ -27,21 +28,23 @@ client.on('qr', async (qr) => {
 
   lastQRGenerated = now;
 
-  console.log('📲 Scan QR berikut di browser:');
+  console.log('📲 QR code diterima. Mencetak dan menyimpan...');
 
   try {
-    const qrImageUrl = await QRCode.toDataURL(qr);
-    console.log(qrImageUrl);
+    await QRCode.toFile(QR_FILE, qr);
+    console.log('✅ QR disimpan di qr.png (unduh dari Railway jika perlu)');
+
+    // (Opsional) Kalau kamu pakai Telegram bot, kirim QR-nya ke chat kamu
+    // sendTelegramImage(QR_FILE);
+
   } catch (err) {
-    console.error('❌ Gagal generate QR:', err.message);
+    console.error('❌ Gagal generate/simpan QR:', err.message);
   }
 });
 
-// Saat client sudah login
 client.on('ready', async () => {
   console.log('✅ WhatsApp bot siap digunakan!\n');
 
-  // Tampilkan daftar grup (sekali saja)
   const chats = await client.getChats();
   chats.forEach(chat => {
     if (chat.isGroup) {
@@ -49,18 +52,15 @@ client.on('ready', async () => {
     }
   });
 
-  console.log('\n📌 Pastikan ALLOWED_GROUP_ID sudah diatur di file .env\n');
+  console.log('\n📌 Pastikan ALLOWED_GROUP_ID sudah diatur di .env');
 });
 
-// Listener pesan masuk
 client.on('message', async msg => {
   const chat = await msg.getChat();
   if (!chat.isGroup) return;
 
   console.log(`[DEBUG] Grup aktif: ${chat.name} (${chat.id._serialized})`);
 
-
-  // ID grup yang diperbolehkan (ambil dari environment)
   const allowedGroupId = process.env.ALLOWED_GROUP_ID;
   if (chat.id._serialized !== allowedGroupId) return;
 
@@ -71,17 +71,15 @@ client.on('message', async msg => {
 
   console.log(`[${formattedTime}] ${sender}: ${content}`);
 
-  // Load data recap
   let recapData = [];
-  // Hanya load recap.json jika bukan di production (lokal testing)
-if (process.env.NODE_ENV !== 'production' && fs.existsSync(RECAP_FILE)) {
-  recapData = JSON.parse(fs.readFileSync(RECAP_FILE));
-}
+
+  if (process.env.NODE_ENV !== 'production' && fs.existsSync(RECAP_FILE)) {
+    recapData = JSON.parse(fs.readFileSync(RECAP_FILE));
+  }
 
   if (content.toLowerCase() === 'done') {
     console.log(`📌 DONE detected dari: ${sender}`);
 
-    // Cari request terakhir dari sender yang belum selesai
     const pending = recapData.reverse().find(entry =>
       entry.requester === sender && !entry.doneTime
     );
@@ -101,11 +99,11 @@ if (process.env.NODE_ENV !== 'production' && fs.existsSync(RECAP_FILE)) {
           pending.requestContent
         ]);
       } catch (error) {
-        console.error('❌ Error appendToSheet:', error);
+        console.error('❌ Error saat appendToSheet (done):', error);
       }
     }
   } else {
-    console.log(`📝 Request detected dari: ${sender}`);
+    console.log(`📝 Request baru dari: ${sender}`);
 
     recapData.push({
       requester: sender,
@@ -125,15 +123,15 @@ if (process.env.NODE_ENV !== 'production' && fs.existsSync(RECAP_FILE)) {
         content
       ]);
     } catch (error) {
-      console.error('❌ Error appendToSheet:', error);
+      console.error('❌ Error saat appendToSheet (request):', error);
     }
   }
 
-  // Simpan recap ke file lokal
   if (process.env.NODE_ENV !== 'production') {
     fs.writeFileSync(RECAP_FILE, JSON.stringify(recapData, null, 2));
   }
 });
 
-// Jalankan bot
-client.initialize();
+client.initialize().catch(err => {
+  console.error('❌ Gagal inisialisasi client:', err);
+});
