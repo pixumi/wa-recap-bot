@@ -70,9 +70,10 @@ client.on('message', async msg => {
 
   // Load data recap
   let recapData = [];
-  if (fs.existsSync(RECAP_FILE)) {
-    recapData = JSON.parse(fs.readFileSync(RECAP_FILE));
-  }
+  // Hanya load recap.json jika bukan di production (lokal testing)
+if (process.env.NODE_ENV !== 'production' && fs.existsSync(RECAP_FILE)) {
+  recapData = JSON.parse(fs.readFileSync(RECAP_FILE));
+}
 
   if (content.toLowerCase() === 'done') {
     console.log(`📌 DONE detected dari: ${sender}`);
@@ -126,7 +127,9 @@ client.on('message', async msg => {
   }
 
   // Simpan recap ke file lokal
-  fs.writeFileSync(RECAP_FILE, JSON.stringify(recapData, null, 2));
+  if (process.env.NODE_ENV !== 'production') {
+    fs.writeFileSync(RECAP_FILE, JSON.stringify(recapData, null, 2));
+  }
 });
 
 // Jalankan bot
