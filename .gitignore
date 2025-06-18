@@ -1,0 +1,7 @@
+# Folder & file yang tidak perlu diupload
+node_modules/
+recap.json
+credentials.json
+.env
+.wwebjs_auth/
+.wwebjs_cache/
