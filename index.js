@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const QRcode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
 const appendToSheet = require('./sheets');
@@ -16,9 +16,15 @@ const client = new Client({
 });
 
 // Tampilkan QR saat pertama kali login
-client.on('qr', qr => {
-  console.log('📲 Scan QR berikut untuk login WhatsApp:');
-  qrcode.generate(qr, { small: true });
+client.on('qr', async (qr) => {
+  console.log('📲 Scan QR berikut di browser:');
+
+  try {
+    const qrImageUrl = await QRCode.toDataURL(qr);
+    console.log(qrImageUrl); // hasil base64 PNG, bisa dibuka di tab browser
+  } catch (err) {
+    console.error('❌ Gagal generate QR:', err.message);
+  }
 });
 
 // Saat client sudah login
