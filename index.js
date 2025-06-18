@@ -6,7 +6,6 @@ const path = require('path');
 const appendToSheet = require('./sheets');
 
 const RECAP_FILE = path.join(__dirname, 'recap.json');
-const QR_FILE = path.join(__dirname, 'qr.png');
 
 console.log('🚀 Memulai WhatsApp bot...');
 
@@ -28,17 +27,13 @@ client.on('qr', async (qr) => {
 
   lastQRGenerated = now;
 
-  console.log('📲 QR code diterima. Mencetak dan menyimpan...');
+  console.log('📲 Scan QR berikut di browser terminal:');
 
   try {
-    await QRCode.toFile(QR_FILE, qr);
-    console.log('✅ QR disimpan di qr.png (unduh dari Railway jika perlu)');
-
-    // (Opsional) Kalau kamu pakai Telegram bot, kirim QR-nya ke chat kamu
-    // sendTelegramImage(QR_FILE);
-
+    const qrImageUrl = await QRCode.toDataURL(qr);
+    console.log(qrImageUrl); // Ini yang akan kamu copy & paste di browser buat scan
   } catch (err) {
-    console.error('❌ Gagal generate/simpan QR:', err.message);
+    console.error('❌ Gagal generate QR:', err.message);
   }
 });
 
@@ -52,7 +47,7 @@ client.on('ready', async () => {
     }
   });
 
-  console.log('\n📌 Pastikan ALLOWED_GROUP_ID sudah diatur di .env');
+  console.log('\n📌 Pastikan ALLOWED_GROUP_ID sudah diatur di Railway env vars');
 });
 
 client.on('message', async msg => {
