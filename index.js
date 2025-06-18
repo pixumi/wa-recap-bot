@@ -57,6 +57,9 @@ client.on('message', async msg => {
   const chat = await msg.getChat();
   if (!chat.isGroup) return;
 
+  console.log(`[DEBUG] Grup aktif: ${chat.name} (${chat.id._serialized})`);
+
+
   // ID grup yang diperbolehkan (ambil dari environment)
   const allowedGroupId = process.env.ALLOWED_GROUP_ID;
   if (chat.id._serialized !== allowedGroupId) return;
