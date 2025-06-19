@@ -1,0 +1,23 @@
+# Abaikan file konfigurasi lokal dan file sensitif
+.env
+recap.json
+credentials.json
+
+# Abaikan folder node_modules biar build lebih bersih
+node_modules
+
+# Abaikan file Git
+.git
+.gitignore
+
+# Abaikan file log dan cache
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Abaikan file sistem editor
+.DS_Store
+*.swp
+*.swo
+.vscode
+.idea
