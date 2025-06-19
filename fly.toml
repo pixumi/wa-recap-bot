@@ -1,21 +1,30 @@
-# fly.toml app configuration file generated for wa-recap-bot on 2025-06-19T20:14:34+08:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
-app = "wa-recap-bot"
-primary_region = "sin"
+app = 'wa-recap-bot'
+primary_region = 'sin'
 
 [experimental]
   auto_rollback = true
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [env]
-  NODE_ENV = "production"
+  NODE_ENV = 'production'
+
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = []
+    port = 3000
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 50
+    soft_limit = 25
 
 [[vm]]
   memory = "1gb"
   cpu_kind = "shared"
   cpus = 1
+  
