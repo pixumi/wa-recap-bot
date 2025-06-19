@@ -5,3 +5,4 @@ credentials.json
 .env
 .wwebjs_auth/
 .wwebjs_cache/
+format-json.js
