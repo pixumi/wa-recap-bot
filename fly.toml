@@ -1,31 +1,38 @@
-# fly.toml file generated for wa-recap-bot on Fly.io
-app = "wa-recap-bot"
+# fly.toml app configuration file generated for wa-recap-bot on 2025-06-19T20:14:34+08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-primary_region = "sin" # pakai Singapore agar lebih dekat ke server WA
-
-[env]
-  NODE_ENV = "production"
-  # Kamu bisa override GOOGLE_SHEET_ID, ALLOWED_GROUP_ID, dan GOOGLE_CREDENTIALS langsung dari Fly dashboard nanti
-
-[build]
-  dockerfile = "Dockerfile"
+app = 'wa-recap-bot'
+primary_region = 'sin'
 
 [experimental]
   auto_rollback = true
 
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  NODE_ENV = 'production'
+
 [[services]]
+  protocol = 'tcp'
   internal_port = 3000
-  protocol = "tcp"
 
   [[services.ports]]
-    handlers = ["http"]
     port = 80
+    handlers = ['http']
 
   [[services.ports]]
-    handlers = ["tls", "http"]
     port = 443
+    handlers = ['tls', 'http']
 
   [services.concurrency]
-    type = "connections"
-    soft_limit = 25
+    type = 'connections'
     hard_limit = 50
+    soft_limit = 25
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

@@ -1,11 +1,10 @@
 require('dotenv').config();
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const QRCode = require('qrcode');
-const fs = require('fs');
-const path = require('path');
+const Redis = require('ioredis');
 const appendToSheet = require('./sheets');
 
-const RECAP_FILE = path.join(__dirname, 'recap.json');
+const redis = new Redis(process.env.REDIS_URL);
 console.log('🚀 Memulai WhatsApp bot...');
 
 const client = new Client({
@@ -71,49 +70,41 @@ client.on('message', async msg => {
   const timestamp = new Date(msg.timestamp * 1000);
   const formattedTime = timestamp.toISOString().replace('T', ' ').split('.')[0];
 
-  let recapData = [];
-
-  if (process.env.NODE_ENV !== 'production' && fs.existsSync(RECAP_FILE)) {
-    recapData = JSON.parse(fs.readFileSync(RECAP_FILE));
-  }
-
   const isRecapRequest = recapRegex.test(content);
   const isDone = content.toLowerCase() === 'done';
-
   if (!isRecapRequest && !isDone) return;
 
   if (isDone) {
-    const pending = recapData.find(entry => !entry.doneTime);
-
-    if (pending) {
-      pending.doneTime = formattedTime;
-      pending.progressBy = sender;
-
-      try {
+    const keys = await redis.keys('recap:*');
+    for (const key of keys) {
+      const data = await redis.hgetall(key);
+      if (!data.doneTime) {
+        await redis.hmset(key, {
+          ...data,
+          doneTime: formattedTime,
+          progressBy: sender
+        });
         await appendToSheet([
-          pending.requester,
+          data.requester,
           sender,
-          pending.requestTime,
+          data.requestTime,
           formattedTime,
           'https://bit.ly/RESPONSE_TIME',
-          pending.requestContent
+          data.requestContent
         ]);
-      } catch (error) {
-        console.error('❌ Error saat appendToSheet (done):', error);
+        break;
       }
     }
   } else {
-    recapData.push({
+    const key = `recap:${Date.now()}`;
+    await redis.hmset(key, {
       requester: sender,
       requestTime: formattedTime,
       requestContent: content,
       doneTime: '',
       progressBy: ''
     });
-  }
-
-  if (process.env.NODE_ENV !== 'production') {
-    fs.writeFileSync(RECAP_FILE, JSON.stringify(recapData, null, 2));
+    await redis.expire(key, 172800); // TTL 2 hari
   }
 });
 
