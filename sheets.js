@@ -2,22 +2,32 @@ require('dotenv').config();
 const { google } = require('googleapis');
 const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
 
+// Flag silent mode dari env
+const silent = process.env.SILENT_MODE === 'true';
+
+// Fungsi log aman
+function log(...args) {
+  if (!silent) console.log(...args);
+}
+function error(...args) {
+  if (!silent) console.error(...args);
+}
+
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const auth = new google.auth.GoogleAuth({
   credentials,
   scopes: SCOPES
 });
 
-// ID Sheet diambil dari environment
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
-const SHEET_NAME = 'Sheet1'; // atau ganti jika tab kamu bukan Sheet1
+const SHEET_NAME = 'Sheet1';
 
 async function appendToSheet(dataArray) {
   try {
     const client = await auth.getClient();
     const sheets = google.sheets({ version: 'v4', auth: client });
 
-    console.log('🧾 Data yang dikirim:', dataArray); // DEBUG
+    log('🧾 Data yang dikirim:', dataArray);
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
@@ -28,16 +38,10 @@ async function appendToSheet(dataArray) {
       },
     });
 
-    console.log('📤 Recap berhasil ditambahkan ke Google Sheet');
-  } catch (error) {
-    console.error('❌ Gagal kirim ke Google Sheet:', error.message);
+    log('📤 Recap berhasil ditambahkan ke Google Sheet');
+  } catch (err) {
+    error('❌ Gagal kirim ke Google Sheet:', err.message || err);
   }
 }
 
 module.exports = appendToSheet;
-
-// Test manual
-// Jalankan dengan: node sheets.js
-
-// Uncomment untuk test manual
-// appendToSheet(['TestSender', '', '2025-06-18 21:00:00', '', 'https://bit.ly/RESPONSE_TIME', 'Testing kirim ke Sheet']);
