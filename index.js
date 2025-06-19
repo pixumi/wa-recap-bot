@@ -1,3 +1,12 @@
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('⚠️ Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', err => {
+  console.error('🔥 Uncaught Exception:', err);
+});
+
+
 require('dotenv').config();
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const QRCode = require('qrcode');
@@ -127,6 +136,14 @@ client.on('message', async msg => {
   }
 });
 
+// Jalankan bot
 client.initialize().catch(err => {
   console.error('❌ Gagal inisialisasi client:', err);
 });
+
+// Tambahkan heartbeat ping tiap 4 menit
+setInterval(() => {
+  const now = new Date().toISOString();
+  console.log(`🫀 Heartbeat: Bot masih aktif @ ${now}`);
+}, 4 * 60 * 1000);
+
