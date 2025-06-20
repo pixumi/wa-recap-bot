@@ -1,6 +1,12 @@
 require('dotenv').config();
 const { google } = require('googleapis');
-const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+let credentials;
+try {
+  credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+} catch (err) {
+  console.error('Invalid GOOGLE_CREDENTIALS JSON:', err.message);
+  process.exit(1);
+}
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const auth = new google.auth.GoogleAuth({

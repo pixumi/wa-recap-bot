@@ -61,3 +61,51 @@ Salin file `.env.example` menjadi `.env` lalu isi variabel berikut:
 ALLOWED_GROUP_ID=1234567890-abcdefg@g.us
 GOOGLE_SHEET_ID=your_google_sheet_id
 ```
+GOOGLE_CREDENTIALS=encoded_credentials
+```
+
+Jika dideploy ke Fly.io, encode `credentials.json` menggunakan perintah berikut dan set sebagai secret:
+
+```bash
+fly secrets set GOOGLE_CREDENTIALS=$(base64 -w0 credentials.json)
+```
+REDIS_URL=your_upstash_connection_string
+```
+
+`REDIS_URL` merupakan string koneksi Redis dari Upstash.
+
+## 🚀 Deploy ke Fly.io
+
+1. **Install Fly CLI** dan login:
+
+   ```bash
+   curl -L https://fly.io/install.sh | sh
+   fly auth login
+   ```
+
+2. **Buat aplikasi** (satu kali saja):
+
+   ```bash
+   fly launch --no-deploy
+   ```
+
+3. **Siapkan database Redis**. Kamu bisa menggunakan layanan gratis seperti
+   [Upstash](https://upstash.com/) dan salin `REDIS_URL`-nya.
+
+4. **Set secrets** yang diperlukan agar tidak tersimpan di repositori:
+
+   ```bash
+   fly secrets set \
+     ALLOWED_GROUP_ID=1234567890-abcdefg@g.us \
+     GOOGLE_SHEET_ID=your_google_sheet_id \
+     GOOGLE_CREDENTIALS="$(cat credentials.json | jq -c .)" \
+     REDIS_URL=redis://username:password@host:port
+   ```
+
+5. **Deploy dan jalankan container**:
+
+   ```bash
+   fly deploy
+   ```
+
+   Setelah proses selesai, bot akan otomatis berjalan di Fly.io.
