@@ -4,19 +4,22 @@ const QRCode = require('qrcode');
 const Redis = require('ioredis');
 const appendToSheet = require('./sheets');
 
+// Debugging: cek isi REDIS_URL
+console.log('🔌 Connecting to Redis:', process.env.REDIS_URL);
 const redis = new Redis(process.env.REDIS_URL);
+
 console.log('🚀 Memulai WhatsApp bot...');
 
 const client = new Client({
   authStrategy: new LocalAuth({
-    dataPath: './.wwebjs_auth' // ✅ WAJIB: set agar path penyimpanan session bisa persistent di Fly.io
+    dataPath: './.wwebjs_auth'
   }),
   puppeteer: {
     headless: true,
-      args: [
+    args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage' // ✅ Tambahan ini mencegah crash di environment terbatas seperti Fly.io
+      '--disable-dev-shm-usage'
     ]
   }
 });
@@ -31,7 +34,6 @@ client.on('qr', async (qr) => {
   }
 
   lastQRGenerated = now;
-
   console.log('📲 Scan QR berikut di browser terminal:');
   try {
     const qrImageUrl = await QRCode.toDataURL(qr);
@@ -78,37 +80,41 @@ client.on('message', async msg => {
   const isDone = content.toLowerCase() === 'done';
   if (!isRecapRequest && !isDone) return;
 
-  if (isDone) {
-    const keys = await redis.keys('recap:*');
-    for (const key of keys) {
-      const data = await redis.hgetall(key);
-      if (!data.doneTime) {
-        await redis.hmset(key, {
-          ...data,
-          doneTime: formattedTime,
-          progressBy: sender
-        });
-        await appendToSheet([
-          data.requester,
-          sender,
-          data.requestTime,
-          formattedTime,
-          'https://bit.ly/RESPONSE_TIME',
-          data.requestContent
-        ]);
-        break;
+  try {
+    if (isDone) {
+      const keys = await redis.keys('recap:*');
+      for (const key of keys) {
+        const data = await redis.hgetall(key);
+        if (!data.doneTime) {
+          await redis.hmset(key, {
+            ...data,
+            doneTime: formattedTime,
+            progressBy: sender
+          });
+          await appendToSheet([
+            data.requester,
+            sender,
+            data.requestTime,
+            formattedTime,
+            'https://bit.ly/RESPONSE_TIME',
+            data.requestContent
+          ]);
+          break;
+        }
       }
+    } else {
+      const key = `recap:${Date.now()}`;
+      await redis.hmset(key, {
+        requester: sender,
+        requestTime: formattedTime,
+        requestContent: content,
+        doneTime: '',
+        progressBy: ''
+      });
+      await redis.expire(key, 172800); // TTL 2 hari
     }
-  } else {
-    const key = `recap:${Date.now()}`;
-    await redis.hmset(key, {
-      requester: sender,
-      requestTime: formattedTime,
-      requestContent: content,
-      doneTime: '',
-      progressBy: ''
-    });
-    await redis.expire(key, 172800); // TTL 2 hari
+  } catch (err) {
+    console.error('❌ Redis error:', err.message);
   }
 });
 
