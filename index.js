@@ -4,16 +4,15 @@ const QRCode = require('qrcode');
 const Redis = require('ioredis');
 const appendToSheet = require('./sheets');
 
-// Debugging: cek isi REDIS_URL
 console.log('🔌 Connecting to Redis:', process.env.REDIS_URL);
 const redis = new Redis(process.env.REDIS_URL);
 
 console.log('🚀 Memulai WhatsApp bot...');
 
+const dataPath = process.env.NODE_ENV === 'production' ? '/app/.wwebjs_auth' : './.wwebjs_auth';
+
 const client = new Client({
-  authStrategy: new LocalAuth({
-    dataPath: './.wwebjs_auth'
-  }),
+  authStrategy: new LocalAuth({ dataPath }),
   puppeteer: {
     headless: true,
     args: [
@@ -45,14 +44,12 @@ client.on('qr', async (qr) => {
 
 client.on('ready', async () => {
   console.log('✅ WhatsApp bot siap digunakan!');
-
   const chats = await client.getChats();
   chats.forEach(chat => {
     if (chat.isGroup) {
       console.log(`🟢 Grup: ${chat.name} | ID: ${chat.id._serialized}`);
     }
   });
-
   console.log('\n📌 Pastikan ALLOWED_GROUP_ID sudah diatur di environment');
 });
 
