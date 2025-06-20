@@ -1,11 +1,9 @@
-# Gunakan image Node resmi
+# Gunakan image Node resmi ringan
 FROM node:18-slim
 
-# Install Chromium dan dependensi Puppeteer
+# Install Chromium dependencies & Chromium itself
 RUN apt-get update && apt-get install -y \
     chromium \
-    chromium-driver \
-    ca-certificates \
     fonts-liberation \
     libappindicator3-1 \
     libasound2 \
@@ -20,26 +18,22 @@ RUN apt-get update && apt-get install -y \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
-    libgbm1 \
     xdg-utils \
- && apt-get clean \
+    libgbm1 \
  && rm -rf /var/lib/apt/lists/*
 
-# Opsional: buat alias agar kompatibel dengan path puppeteer
-RUN ln -fs /usr/bin/chromium /usr/bin/chromium-browser
-
-# Set working directory
+# Working directory
 WORKDIR /app
 
-# Salin dan install dependencies
+# Copy package.json lalu install dependency
 COPY package*.json ./
 RUN npm install --omit=dev
 
-# Salin semua file ke image
+# Copy semua file project
 COPY . .
 
-# Port dummy untuk Fly.io (tidak digunakan)
+# Expose port (untuk keperluan proxy meski tidak digunakan)
 EXPOSE 3000
 
-# Jalankan bot
+# Start bot
 CMD ["npm", "start"]
