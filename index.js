@@ -18,8 +18,13 @@ const client = new Client({
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage'
-    ]
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--no-zygote',
+      '--single-process'
+    ],
+    executablePath: '/usr/bin/chromium-browser'
   }
 });
 
