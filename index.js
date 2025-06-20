@@ -83,21 +83,31 @@ client.on('message', async (msg) => {
   const timestamp = new Date(msg.timestamp * 1000);
   const formattedTime = timestamp.toISOString().replace('T', ' ').split('.')[0];
 
+  console.log(`📥 Pesan diterima dari ${sender} di grup ${chat.name}: "${content}"`);
+
   const isRecapRequest = recapRegex.test(content);
   const isDone = content.toLowerCase() === 'done';
-  if (!isRecapRequest && !isDone) return;
+  if (!isRecapRequest && !isDone) {
+    console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
+    return;
+  }
 
   try {
     if (isDone) {
+      console.log('🔍 Mencari request belum selesai di Redis...');
       const keys = await redis.keys('recap:*');
       for (const key of keys) {
         const data = await redis.hgetall(key);
         if (!data.doneTime) {
+          console.log(`✅ Menandai request "${data.requestContent}" sebagai selesai.`);
+
           await redis.hmset(key, {
             ...data,
             doneTime: formattedTime,
             progressBy: sender
           });
+
+          console.log('📝 Menulis data ke Google Spreadsheet...');
           await appendToSheet([
             data.requester,
             sender,
@@ -106,11 +116,14 @@ client.on('message', async (msg) => {
             'https://bit.ly/RESPONSE_TIME',
             data.requestContent
           ]);
+
+          console.log('✅ Berhasil tulis ke spreadsheet!');
           break;
         }
       }
     } else {
       const key = `recap:${Date.now()}`;
+      console.log(`📌 Menyimpan request baru ke Redis: ${content}`);
       await redis.hmset(key, {
         requester: sender,
         requestTime: formattedTime,
@@ -119,9 +132,10 @@ client.on('message', async (msg) => {
         progressBy: ''
       });
       await redis.expire(key, 172800); // TTL 2 hari
+      console.log('🧠 Request berhasil disimpan sementara.');
     }
   } catch (err) {
-    console.error('❌ Redis error:', err.message);
+    console.error('❌ Redis / Sheets Error:', err.message);
   }
 });
 
