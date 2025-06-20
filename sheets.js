@@ -1,8 +1,24 @@
 require('dotenv').config();
 const { google } = require('googleapis');
+
+let raw = process.env.GOOGLE_CREDENTIALS;
+if (!raw) {
+  console.error('Missing GOOGLE_CREDENTIALS environment variable.');
+  process.exit(1);
+}
+
+if (!raw.trim().startsWith('{')) {
+  try {
+    raw = Buffer.from(raw, 'base64').toString('utf8');
+  } catch (err) {
+    console.error('Invalid base64 in GOOGLE_CREDENTIALS:', err.message);
+    process.exit(1);
+  }
+}
+
 let credentials;
 try {
-  credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+  credentials = JSON.parse(raw);
 } catch (err) {
   console.error('Invalid GOOGLE_CREDENTIALS JSON:', err.message);
   process.exit(1);

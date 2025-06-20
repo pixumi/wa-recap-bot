@@ -60,19 +60,17 @@ Salin file `.env.example` menjadi `.env` lalu isi variabel berikut:
 ```env
 ALLOWED_GROUP_ID=1234567890-abcdefg@g.us
 GOOGLE_SHEET_ID=your_google_sheet_id
+GOOGLE_CREDENTIALS=base64_encoded_credentials
+REDIS_URL=your_upstash_connection_string
 ```
-GOOGLE_CREDENTIALS=encoded_credentials
-```
+
+`REDIS_URL` merupakan string koneksi Redis dari Upstash.
 
 Jika dideploy ke Fly.io, encode `credentials.json` menggunakan perintah berikut dan set sebagai secret:
 
 ```bash
 fly secrets set GOOGLE_CREDENTIALS=$(base64 -w0 credentials.json)
 ```
-REDIS_URL=your_upstash_connection_string
-```
-
-`REDIS_URL` merupakan string koneksi Redis dari Upstash.
 
 ## 🚀 Deploy ke Fly.io
 
@@ -95,11 +93,11 @@ REDIS_URL=your_upstash_connection_string
 4. **Set secrets** yang diperlukan agar tidak tersimpan di repositori:
 
    ```bash
-   fly secrets set \
-     ALLOWED_GROUP_ID=1234567890-abcdefg@g.us \
-     GOOGLE_SHEET_ID=your_google_sheet_id \
-     GOOGLE_CREDENTIALS="$(cat credentials.json | jq -c .)" \
-     REDIS_URL=redis://username:password@host:port
+  fly secrets set \
+    ALLOWED_GROUP_ID=1234567890-abcdefg@g.us \
+    GOOGLE_SHEET_ID=your_google_sheet_id \
+    GOOGLE_CREDENTIALS=$(base64 -w0 credentials.json) \
+    REDIS_URL=redis://username:password@host:port
    ```
 
 5. **Deploy dan jalankan container**:
