@@ -10,6 +10,6 @@ primary_region = "sin"
 [env]
   NODE_ENV = "production"
 
-[[mounts]]
+[mounts]
   source = "wwebjs_data"
   destination = "/app/.wwebjs_auth"
