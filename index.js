@@ -4,12 +4,14 @@ const QRCode = require('qrcode');
 const Redis = require('ioredis');
 const appendToSheet = require('./sheets');
 
+// Debug koneksi Redis
 console.log('🔌 Connecting to Redis:', process.env.REDIS_URL);
 const redis = new Redis(process.env.REDIS_URL);
 
-console.log('🚀 Memulai WhatsApp bot...');
-
+// Path sesi untuk Fly.io atau lokal
 const dataPath = process.env.NODE_ENV === 'production' ? '/app/.wwebjs_auth' : './.wwebjs_auth';
+
+console.log('🚀 Memulai WhatsApp bot...');
 
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath }),
@@ -39,6 +41,7 @@ client.on('qr', async (qr) => {
 
   lastQRGenerated = now;
   console.log('📲 Scan QR berikut di browser terminal:');
+
   try {
     const qrImageUrl = await QRCode.toDataURL(qr);
     console.log(qrImageUrl);
@@ -49,12 +52,14 @@ client.on('qr', async (qr) => {
 
 client.on('ready', async () => {
   console.log('✅ WhatsApp bot siap digunakan!');
+
   const chats = await client.getChats();
   chats.forEach(chat => {
     if (chat.isGroup) {
       console.log(`🟢 Grup: ${chat.name} | ID: ${chat.id._serialized}`);
     }
   });
+
   console.log('\n📌 Pastikan ALLOWED_GROUP_ID sudah diatur di environment');
 });
 
@@ -64,9 +69,10 @@ const recapKeywords = [
   'maintan', 'maintence', 'maintance', 'maintened', 'maintanace',
   'open', 'bin', 'update', 'realis', 'rilis', 'release', 'sto'
 ];
+
 const recapRegex = new RegExp(`\\b(${recapKeywords.join('|')})\\b`, 'i');
 
-client.on('message', async msg => {
+client.on('message', async (msg) => {
   const chat = await msg.getChat();
   if (!chat.isGroup) return;
 
