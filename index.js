@@ -9,7 +9,9 @@ console.log('🔌 Connecting to Redis:', process.env.REDIS_URL);
 const redis = new Redis(process.env.REDIS_URL);
 
 // Path sesi untuk Fly.io atau lokal
-const dataPath = process.env.NODE_ENV === 'production' ? '/app/.wwebjs_auth' : './.wwebjs_auth';
+const dataPath = process.env.NODE_ENV === 'production'
+  ? '/app/.wwebjs_auth'
+  : './.wwebjs_auth';
 
 console.log('🚀 Memulai WhatsApp bot...');
 
@@ -25,8 +27,7 @@ const client = new Client({
       '--disable-software-rasterizer',
       '--no-zygote',
       '--single-process'
-    ],
-    executablePath: '/usr/bin/chromium-browser'
+    ]
   }
 });
 
@@ -41,7 +42,6 @@ client.on('qr', async (qr) => {
 
   lastQRGenerated = now;
   console.log('📲 Scan QR berikut di browser terminal:');
-
   try {
     const qrImageUrl = await QRCode.toDataURL(qr);
     console.log(qrImageUrl);
@@ -52,7 +52,6 @@ client.on('qr', async (qr) => {
 
 client.on('ready', async () => {
   console.log('✅ WhatsApp bot siap digunakan!');
-
   const chats = await client.getChats();
   chats.forEach(chat => {
     if (chat.isGroup) {

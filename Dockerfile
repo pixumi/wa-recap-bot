@@ -1,8 +1,10 @@
 # Gunakan image Node resmi
 FROM node:18-slim
 
-# Install dependensi Puppeteer Chromium
+# Install Chromium dan dependensi Puppeteer
 RUN apt-get update && apt-get install -y \
+    chromium \
+    chromium-driver \
     ca-certificates \
     fonts-liberation \
     libappindicator3-1 \
@@ -18,23 +20,25 @@ RUN apt-get update && apt-get install -y \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
-    xdg-utils \
     libgbm1 \
+    xdg-utils \
+ && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
+
+# Opsional: buat alias agar kompatibel dengan path puppeteer
+RUN ln -fs /usr/bin/chromium /usr/bin/chromium-browser
 
 # Set working directory
 WORKDIR /app
 
-# Salin file package terlebih dahulu
+# Salin dan install dependencies
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install --omit=dev
 
 # Salin semua file ke image
 COPY . .
 
-# Port default (tidak digunakan karena tidak ada web server, tapi Fly butuh ini)
+# Port dummy untuk Fly.io (tidak digunakan)
 EXPOSE 3000
 
 # Jalankan bot
