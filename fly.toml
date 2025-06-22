@@ -9,6 +9,19 @@ primary_region = "sin"
 
 [env]
   NODE_ENV = "production"
+  PORT = "3000"
+
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
 
 [mounts]
   source = "wwebjs_data"
