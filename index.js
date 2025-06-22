@@ -4,17 +4,30 @@ const QRCode = require('qrcode');
 const Redis = require('ioredis');
 const appendToSheet = require('./sheets');
 
-// Debug koneksi Redis
+// === 🔁 AUTO RESTART TIAP 6 JAM ===
+setTimeout(() => {
+  console.log('♻️ Auto-restart triggered after 6 hours');
+  process.exit(1);
+}, 6 * 60 * 60 * 1000); // 6 jam
+
+// === 📈 TRACKING MEMORY USAGE ===
+setInterval(() => {
+  const mem = process.memoryUsage();
+  console.log(`📊 Memory - RSS: ${(mem.rss / 1024 / 1024).toFixed(1)} MB | Heap: ${(mem.heapUsed / 1024 / 1024).toFixed(1)} MB`);
+}, 5 * 60 * 1000); // Tiap 5 menit
+
+// === 🔌 Redis Init ===
 console.log('🔌 Connecting to Redis:', process.env.REDIS_URL);
 const redis = new Redis(process.env.REDIS_URL);
 
-// Path sesi untuk Fly.io atau lokal
+// === Auth Path ===
 const dataPath = process.env.NODE_ENV === 'production'
   ? '/app/.wwebjs_auth'
   : './.wwebjs_auth';
 
 console.log('🚀 Memulai WhatsApp bot...');
 
+// === Puppeteer Optimization ===
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath }),
   puppeteer: {
@@ -26,8 +39,13 @@ const client = new Client({
       '--disable-gpu',
       '--disable-software-rasterizer',
       '--no-zygote',
-      '--single-process'
-    ]
+      '--single-process',
+      '--disable-extensions',
+      '--disable-infobars',
+      '--js-flags=--max-old-space-size=256'
+    ],
+    // Optional tweak
+    executablePath: process.env.CHROME_BIN || undefined
   }
 });
 
@@ -72,27 +90,27 @@ const recapKeywords = [
 const recapRegex = new RegExp(`\\b(${recapKeywords.join('|')})\\b`, 'i');
 
 client.on('message', async (msg) => {
-  const chat = await msg.getChat();
-  if (!chat.isGroup) return;
-
-  const allowedGroupId = process.env.ALLOWED_GROUP_ID;
-  if (chat.id._serialized !== allowedGroupId) return;
-
-  const sender = msg.author || msg.from;
-  const content = msg.body.trim();
-  const timestamp = new Date(msg.timestamp * 1000);
-  const formattedTime = timestamp.toISOString().replace('T', ' ').split('.')[0];
-
-  console.log(`📥 Pesan diterima dari ${sender} di grup ${chat.name}: "${content}"`);
-
-  const isRecapRequest = recapRegex.test(content);
-  const isDone = content.toLowerCase() === 'done';
-  if (!isRecapRequest && !isDone) {
-    console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
-    return;
-  }
-
   try {
+    const chat = await msg.getChat();
+    if (!chat.isGroup) return;
+
+    const allowedGroupId = process.env.ALLOWED_GROUP_ID;
+    if (chat.id._serialized !== allowedGroupId) return;
+
+    const sender = msg.author || msg.from;
+    const content = msg.body.trim();
+    const timestamp = new Date(msg.timestamp * 1000);
+    const formattedTime = timestamp.toISOString().replace('T', ' ').split('.')[0];
+
+    console.log(`📥 Pesan dari ${sender} di grup ${chat.name}: "${content}"`);
+
+    const isRecapRequest = recapRegex.test(content);
+    const isDone = content.toLowerCase() === 'done';
+    if (!isRecapRequest && !isDone) {
+      console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
+      return;
+    }
+
     if (isDone) {
       console.log('🔍 Mencari request belum selesai di Redis...');
       const keys = await redis.keys('recap:*');
@@ -135,7 +153,7 @@ client.on('message', async (msg) => {
       console.log('🧠 Request berhasil disimpan sementara.');
     }
   } catch (err) {
-    console.error('❌ Redis / Sheets Error:', err.message);
+    console.error('❌ Handler error:', err.message);
   }
 });
 
