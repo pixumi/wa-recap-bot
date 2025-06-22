@@ -61,7 +61,6 @@ async function appendToSheet(dataArray) {
       },
     });
 
-    console.log('📤 Data ditulis ke spreadsheet.');
   } catch (err) {
     console.error('❌ Gagal menulis ke spreadsheet:', err.message);
   }

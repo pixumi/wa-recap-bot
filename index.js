@@ -4,11 +4,29 @@ const QRCode = require('qrcode');
 const Redis = require('ioredis');
 const appendToSheet = require('./sheets');
 
-// === 🔁 AUTO RESTART TIAP 6 JAM ===
-setTimeout(() => {
-  console.log('♻️ Auto-restart triggered after 6 hours');
-  process.exit(1);
-}, 6 * 60 * 60 * 1000); // 6 jam
+// === 🔁 AUTO RESTART SETIAP 00:30 WITA (UTC+8) ===
+(function scheduleRestart() {
+  const now = new Date();
+
+  // Target waktu restart: 00:30 WITA → 16:30 UTC
+  const target = new Date(now);
+  target.setUTCHours(16, 30, 0, 0); // 00:30 WITA
+
+  // Kalau sudah lewat hari ini, jadwalkan besok
+  if (now > target) {
+    target.setUTCDate(target.getUTCDate() + 1);
+  }
+
+  const msUntilRestart = target - now;
+  const jam = Math.floor(msUntilRestart / 3600000);
+  const menit = Math.floor((msUntilRestart % 3600000) / 60000);
+  console.log(`⏳ Bot akan auto-restart dalam ${jam} jam ${menit} menit (target: ${target.toISOString()})`);
+
+  setTimeout(() => {
+    console.log('♻️ Waktu restart harian (00:30 WITA) tercapai. Bot akan keluar...');
+    process.exit(1);
+  }, msUntilRestart);
+})();
 
 // === 📈 TRACKING MEMORY USAGE ===
 setInterval(() => {
@@ -44,7 +62,6 @@ const client = new Client({
       '--disable-infobars',
       '--js-flags=--max-old-space-size=256'
     ],
-    // Optional tweak
     executablePath: process.env.CHROME_BIN || undefined
   }
 });
@@ -100,7 +117,11 @@ client.on('message', async (msg) => {
     const sender = msg.author || msg.from;
     const content = msg.body.trim();
     const timestamp = new Date(msg.timestamp * 1000);
-    const formattedTime = timestamp.toISOString().replace('T', ' ').split('.')[0];
+    
+    // Konversi ke UTC+8 (WITA)
+    const witaTime = new Date(timestamp.getTime() + (8 * 60 * 60 * 1000));
+    const formattedTime = witaTime.toISOString().replace('T', ' ').split('.')[0];
+
 
     console.log(`📥 Pesan dari ${sender} di grup ${chat.name}: "${content}"`);
 
