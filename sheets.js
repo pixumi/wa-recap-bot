@@ -38,7 +38,6 @@ let sheetsClient = null;
 let sheetsAPI = null;
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
-const SHEET_NAME = 'Sheet1';
 
 async function getSheets() {
   if (!sheetsClient) {
@@ -48,22 +47,30 @@ async function getSheets() {
   return sheetsAPI;
 }
 
-async function appendToSheet(dataArray) {
+async function appendToSheetMulti({ sheet2, sheet6 }) {
   try {
     const sheets = await getSheets();
 
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A:F`,
-      valueInputOption: 'USER_ENTERED',
-      resource: {
-        values: [dataArray],
-      },
-    });
+    if (sheet2) {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SHEET_ID,
+        range: `Sheet2!A:F`,
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: [sheet2] },
+      });
+    }
 
+    if (sheet6) {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SHEET_ID,
+        range: `Sheet6!A:F`,
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: [sheet6] },
+      });
+    }
   } catch (err) {
-    console.error('❌ Gagal menulis ke spreadsheet:', err.message);
+    console.error('❌ Gagal menulis ke multi-sheet:', err.message);
   }
 }
 
-module.exports = appendToSheet;
+module.exports = { appendToSheetMulti };

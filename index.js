@@ -2,7 +2,7 @@ require('dotenv').config();
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const QRCode = require('qrcode');
 const Redis = require('ioredis');
-const appendToSheet = require('./sheets');
+const { appendToSheetMulti } = require('./sheets');
 
 // === 🔁 AUTO RESTART SETIAP 00:30 WITA (UTC+8) ===
 (function scheduleRestart() {
@@ -90,7 +90,6 @@ client.on('ready', async () => {
 });
 
 const recapKeywords = [
-  'bnt', 'bntu', 'bantu',
   'mainten', 'menten', 'maintain', 'maintanance', 'maintannace', 'maintenance', 'maiantan',
   'maintan', 'maintence', 'maintance', 'maintened', 'maintanace',
   'open', 'block', 'blok', 'unblock', 'bin', 'update', 'realis', 'rilis', 'release', 'sto',
@@ -145,13 +144,13 @@ client.on('message', async (msg) => {
 
     let activity = 'LAINNYA';
     const text = content.toLowerCase();
-    if (/\b(bnt|bntu|bantu|mainten|menten|maintain|maintanance|maintannace|maintenance|maiantan|maintan|maintence|maintance|maintened|maintanace|bin|update)\b/i.test(text)) {
+    if (/\b(mainten|menten|maintain|maintanance|maintannace|maintenance|maiantan|maintan|maintence|maintance|maintened|maintanace|bin|update)\b/i.test(text)) {
       activity = 'MAINTAIN';
     } else if (/\b(open|block|blok|unblock)\b/i.test(text)) {
       activity = 'BLOK/OPEN BLOCK';
     } else if (/\b(realis|rilis|release|sto)\b/i.test(text)) {
       activity = 'RELEASE/UNRELEASE PO';
-    } else if (/\b(intransit|transit)\b/i.test(text)) {
+    } else if (/\b(setting|intransit|transit)\b/i.test(text)) {
       activity = 'SETTING INTRANSIT PO';
     }
 
@@ -185,15 +184,24 @@ client.on('message', async (msg) => {
           });
 
           console.log('📝 Menulis data ke Google Spreadsheet...');
-          await appendToSheet([
-            activity,
-            (data.requesterName || data.requester).toUpperCase(),
-            senderName,
-            data.requestTime,
-            formattedTime,
-            'https://bit.ly/RESPONSE_TIME',
-            data.requestContent
-          ]);
+          await appendToSheetMulti({
+            sheet2: [
+              activity,
+              (data.requesterName || data.requester).toUpperCase(),
+              senderName,
+              data.requestTime,
+              formattedTime,
+              'https://bit.ly/RESPONSE_TIME'
+            ],
+            sheet6: [
+              activity,
+              (data.requesterName || data.requester).toUpperCase(),
+              senderName,
+              data.requestTime,
+              formattedTime,
+              data.requestContent
+            ]
+          });
 
           console.log('✅ Berhasil tulis ke spreadsheet!');
           break;
