@@ -144,15 +144,17 @@ client.on('message', async (msg) => {
 
     let activity = 'LAINNYA';
     const text = content.toLowerCase();
-    if (/\b(mainten|menten|maintain|maintanance|maintannace|maintenance|maiantan|maintan|maintence|maintance|maintened|maintanace|bin|update)\b/i.test(text)) {
+
+    if (['mainten','menten','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update'].some(k => text.includes(k))) {
       activity = 'MAINTAIN';
-    } else if (/\b(open|block|blok|unblock)\b/i.test(text)) {
+    } else if (['open','block','blok','unblock'].some(k => text.includes(k))) {
       activity = 'BLOK/OPEN BLOCK';
-    } else if (/\b(realis|rilis|release|sto)\b/i.test(text)) {
+    } else if (['realis','rilis','release','sto'].some(k => text.includes(k))) {
       activity = 'RELEASE/UNRELEASE PO';
-    } else if (/\b(setting|intransit|transit)\b/i.test(text)) {
+    } else if (['setting','intransit','transit'].some(k => text.includes(k))) {
       activity = 'SETTING INTRANSIT PO';
     }
+
 
     // Filter pesan yang tidak termasuk recap atau done
     if (!isRecapRequest && !isDone) {
