@@ -204,6 +204,7 @@ client.on('message', async (msg) => {
       const key = `recap:${Date.now()}`;
       console.log(`📌 Menyimpan request baru ke Redis: ${content}`);
       await redis.hmset(key, {
+        activity: activity,
         requester: senderId,
         requesterName: senderName,
         requestTime: formattedTime,
