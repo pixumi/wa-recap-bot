@@ -110,6 +110,14 @@ client.on('message', async (msg) => {
     const contact = await msg.getContact();
     const senderName = contact.pushname || contact.name || senderId;
 
+    // 🔒 Override nama untuk user tertentu
+    if (senderId === '6285212540122@c.us') {
+      senderName = 'DHARMA';
+    }
+
+    // Ubah jadi huruf kapital semua
+    senderName = senderName.toUpperCase()
+
     const content = msg.body.trim();
     const timestamp = new Date(msg.timestamp * 1000);
 
@@ -127,8 +135,16 @@ client.on('message', async (msg) => {
 
     const isRecapRequest = recapRegex.test(content);
     const isDone = content.toLowerCase() === 'done';
+
+    // Filter pesan yang tidak termasuk recap atau done
     if (!isRecapRequest && !isDone) {
       console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
+      return;
+    }
+
+    // Batasan: hanya ID tertentu yang boleh kirim 'done'
+    if (isDone && senderId !== '6285212540122@c.us') {
+      console.log(`⛔ Pengirim ${senderId} tidak diizinkan mengirim 'done'. Diabaikan.`);
       return;
     }
 
@@ -149,7 +165,7 @@ client.on('message', async (msg) => {
 
           console.log('📝 Menulis data ke Google Spreadsheet...');
           await appendToSheet([
-            data.requesterName || data.requester,
+            (data.requesterName || data.requester).toUpperCase(),
             senderName,
             data.requestTime,
             formattedTime,
