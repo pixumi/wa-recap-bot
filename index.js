@@ -93,7 +93,8 @@ const recapKeywords = [
   'bnt', 'bntu', 'bantu',
   'mainten', 'menten', 'maintain', 'maintanance', 'maintannace', 'maintenance', 'maiantan',
   'maintan', 'maintence', 'maintance', 'maintened', 'maintanace',
-  'open', 'block', 'blok', 'unblock', 'bin', 'update', 'realis', 'rilis', 'release', 'sto'
+  'open', 'block', 'blok', 'unblock', 'bin', 'update', 'realis', 'rilis', 'release', 'sto',
+  'intransit', 'transit'
 ];
 
 const recapRegex = new RegExp(`\\b(${recapKeywords.join('|')})\\b`, 'i');
@@ -124,7 +125,6 @@ client.on('message', async (msg) => {
 
     senderName = senderName.toUpperCase();
 
-    // Ubah jadi huruf kapital semua
     const content = msg.body.trim();
     const timestamp = new Date(msg.timestamp * 1000);
 
@@ -143,7 +143,7 @@ client.on('message', async (msg) => {
     const isRecapRequest = recapRegex.test(content);
     const isDone = content.toLowerCase() === 'done';
 
-    let activity = 'UNKNOWN';
+    let activity = 'LAINNYA';
     const text = content.toLowerCase();
     if (/\b(bnt|bntu|bantu|mainten|menten|maintain|maintanance|maintannace|maintenance|maiantan|maintan|maintence|maintance|maintened|maintanace|bin|update)\b/i.test(text)) {
       activity = 'MAINTAIN';
@@ -164,7 +164,6 @@ client.on('message', async (msg) => {
     // Batasan: hanya ID tertentu yang boleh kirim 'done'
     const allowedDoneSenders = ['6285212540122@c.us', '6282353086174@c.us'];
 
-    
     if (isDone && !allowedDoneSenders.includes(senderId)) {
       console.log(`❌ Pengirim ${senderId} tidak diizinkan mengirim 'done'. Diabaikan.`);
       return;
@@ -204,7 +203,7 @@ client.on('message', async (msg) => {
       const key = `recap:${Date.now()}`;
       console.log(`📌 Menyimpan request baru ke Redis: ${content}`);
       await redis.hmset(key, {
-        activity: activity,
+        activity,
         requester: senderId,
         requesterName: senderName,
         requestTime: formattedTime,
