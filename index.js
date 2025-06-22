@@ -108,15 +108,20 @@ client.on('message', async (msg) => {
 
     const senderId = msg.author || msg.from;
     const contact = await msg.getContact();
-    let senderName = contact.pushname || contact.name || senderId;
 
     // 🔒 Override nama untuk user tertentu
-    if (senderId === '6285212540122@c.us') {
-      senderName = 'DHARMA';
+    const senderOverrides = {
+      '6285212540122@c.us': 'DHARMA',
+      '6282353086174@c.us': 'DOMAS'
+    };
+
+    let senderName;
+    if (senderOverrides[senderId]) {
+      senderName = senderOverrides[senderId];
     } else {
-      const contact = await msg.getContact();
       senderName = contact?.pushname?.toUpperCase() || senderId.toUpperCase();
     }
+
 
     // Ubah jadi huruf kapital semua
     senderName = senderName.toUpperCase()
@@ -146,8 +151,10 @@ client.on('message', async (msg) => {
     }
 
     // Batasan: hanya ID tertentu yang boleh kirim 'done'
-    if (isDone && senderId !== '6285212540122@c.us') {
-      console.log(`⛔ Pengirim ${senderId} tidak diizinkan mengirim 'done'. Diabaikan.`);
+    const allowedDoneSenders = ['6285212540122@c.us', '6282353086174@c.us'];
+
+    if (isDone && !allowedDoneSenders.includes(senderId)) {
+      console.log(`❌ Pengirim ${senderId} tidak diizinkan mengirim 'done'. Diabaikan.`);
       return;
     }
 
