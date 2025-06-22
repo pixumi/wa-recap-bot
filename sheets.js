@@ -54,7 +54,7 @@ async function appendToSheetMulti({ sheet2, sheet6 }) {
     if (sheet2) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: `Sheet2!C:H`,
+        range: `Sheet2!A:F`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: [sheet2] },
       });
@@ -63,7 +63,7 @@ async function appendToSheetMulti({ sheet2, sheet6 }) {
     if (sheet6) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: `Sheet6!C:I`,
+        range: `Sheet6!A:G`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: [sheet6] },
       });
