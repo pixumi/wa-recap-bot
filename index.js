@@ -7,21 +7,13 @@ const appendToSheet = require('./sheets');
 // === 🔁 AUTO RESTART SETIAP 00:30 WITA (UTC+8) ===
 (function scheduleRestart() {
   const now = new Date();
-
-  // Target waktu restart: 00:30 WITA → 16:30 UTC
   const target = new Date(now);
   target.setUTCHours(16, 30, 0, 0); // 00:30 WITA
-
-  // Kalau sudah lewat hari ini, jadwalkan besok
-  if (now > target) {
-    target.setUTCDate(target.getUTCDate() + 1);
-  }
-
+  if (now > target) target.setUTCDate(target.getUTCDate() + 1);
   const msUntilRestart = target - now;
   const jam = Math.floor(msUntilRestart / 3600000);
   const menit = Math.floor((msUntilRestart % 3600000) / 60000);
   console.log(`⏳ Bot akan auto-restart dalam ${jam} jam ${menit} menit (target: ${target.toISOString()})`);
-
   setTimeout(() => {
     console.log('♻️ Waktu restart harian (00:30 WITA) tercapai. Bot akan keluar...');
     process.exit(1);
@@ -32,7 +24,7 @@ const appendToSheet = require('./sheets');
 setInterval(() => {
   const mem = process.memoryUsage();
   console.log(`📊 Memory - RSS: ${(mem.rss / 1024 / 1024).toFixed(1)} MB | Heap: ${(mem.heapUsed / 1024 / 1024).toFixed(1)} MB`);
-}, 5 * 60 * 1000); // Tiap 5 menit
+}, 5 * 60 * 1000);
 
 // === 🔌 Redis Init ===
 console.log('🔌 Connecting to Redis:', process.env.REDIS_URL);
@@ -114,25 +106,24 @@ client.on('message', async (msg) => {
     const allowedGroupId = process.env.ALLOWED_GROUP_ID;
     if (chat.id._serialized !== allowedGroupId) return;
 
-    const sender = msg.author || msg.from;
+    const senderId = msg.author || msg.from;
+    const contact = await msg.getContact();
+    const senderName = contact.pushname || contact.name || senderId;
+
     const content = msg.body.trim();
     const timestamp = new Date(msg.timestamp * 1000);
 
     // Konversi ke WITA (UTC+8)
     const witaTime = new Date(timestamp.getTime() + (8 * 60 * 60 * 1000));
-
-    // Format jadi MM/DD/YYYY HH:mm:ss
     const mm = String(witaTime.getMonth() + 1).padStart(2, '0');
     const dd = String(witaTime.getDate()).padStart(2, '0');
     const yyyy = witaTime.getFullYear();
     const hh = String(witaTime.getHours()).padStart(2, '0');
     const min = String(witaTime.getMinutes()).padStart(2, '0');
     const ss = String(witaTime.getSeconds()).padStart(2, '0');
-
     const formattedTime = `${mm}/${dd}/${yyyy} ${hh}:${min}:${ss}`;
 
-
-    console.log(`📥 Pesan dari ${sender} di grup ${chat.name}: "${content}"`);
+    console.log(`📥 Pesan dari ${senderName} di grup ${chat.name}: "${content}"`);
 
     const isRecapRequest = recapRegex.test(content);
     const isDone = content.toLowerCase() === 'done';
@@ -152,13 +143,14 @@ client.on('message', async (msg) => {
           await redis.hmset(key, {
             ...data,
             doneTime: formattedTime,
-            progressBy: sender
+            progressBy: senderId,
+            progressByName: senderName
           });
 
           console.log('📝 Menulis data ke Google Spreadsheet...');
           await appendToSheet([
-            data.requester,
-            sender,
+            data.requesterName || data.requester,
+            senderName,
             data.requestTime,
             formattedTime,
             'https://bit.ly/RESPONSE_TIME',
@@ -173,13 +165,15 @@ client.on('message', async (msg) => {
       const key = `recap:${Date.now()}`;
       console.log(`📌 Menyimpan request baru ke Redis: ${content}`);
       await redis.hmset(key, {
-        requester: sender,
+        requester: senderId,
+        requesterName: senderName,
         requestTime: formattedTime,
         requestContent: content,
         doneTime: '',
-        progressBy: ''
+        progressBy: '',
+        progressByName: ''
       });
-      await redis.expire(key, 172800); // TTL 2 hari
+      await redis.expire(key, 172800);
       console.log('🧠 Request berhasil disimpan sementara.');
     }
   } catch (err) {
