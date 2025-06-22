@@ -93,7 +93,7 @@ const recapKeywords = [
   'bnt', 'bntu', 'bantu',
   'mainten', 'menten', 'maintain', 'maintanance', 'maintannace', 'maintenance', 'maiantan',
   'maintan', 'maintence', 'maintance', 'maintened', 'maintanace',
-  'open', 'bin', 'update', 'realis', 'rilis', 'release', 'sto'
+  'open', 'block', 'blok', 'unblock', 'bin', 'update', 'realis', 'rilis', 'release', 'sto'
 ];
 
 const recapRegex = new RegExp(`\\b(${recapKeywords.join('|')})\\b`, 'i');
@@ -122,10 +122,9 @@ client.on('message', async (msg) => {
       senderName = contact?.pushname?.toUpperCase() || senderId.toUpperCase();
     }
 
+    senderName = senderName.toUpperCase();
 
     // Ubah jadi huruf kapital semua
-    senderName = senderName.toUpperCase()
-
     const content = msg.body.trim();
     const timestamp = new Date(msg.timestamp * 1000);
 
@@ -144,6 +143,18 @@ client.on('message', async (msg) => {
     const isRecapRequest = recapRegex.test(content);
     const isDone = content.toLowerCase() === 'done';
 
+    let activity = 'UNKNOWN';
+    const text = content.toLowerCase();
+    if (/\b(bnt|bntu|bantu|mainten|menten|maintain|maintanance|maintannace|maintenance|maiantan|maintan|maintence|maintance|maintened|maintanace|bin|update)\b/i.test(text)) {
+      activity = 'MAINTAIN';
+    } else if (/\b(open|block|blok|unblock)\b/i.test(text)) {
+      activity = 'BLOK/OPEN BLOCK';
+    } else if (/\b(realis|rilis|release|sto)\b/i.test(text)) {
+      activity = 'RELEASE/UNRELEASE PO';
+    } else if (/\b(intransit|transit)\b/i.test(text)) {
+      activity = 'SETTING INTRANSIT PO';
+    }
+
     // Filter pesan yang tidak termasuk recap atau done
     if (!isRecapRequest && !isDone) {
       console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
@@ -153,6 +164,7 @@ client.on('message', async (msg) => {
     // Batasan: hanya ID tertentu yang boleh kirim 'done'
     const allowedDoneSenders = ['6285212540122@c.us', '6282353086174@c.us'];
 
+    
     if (isDone && !allowedDoneSenders.includes(senderId)) {
       console.log(`❌ Pengirim ${senderId} tidak diizinkan mengirim 'done'. Diabaikan.`);
       return;
@@ -175,6 +187,7 @@ client.on('message', async (msg) => {
 
           console.log('📝 Menulis data ke Google Spreadsheet...');
           await appendToSheet([
+            activity,
             (data.requesterName || data.requester).toUpperCase(),
             senderName,
             data.requestTime,
