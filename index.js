@@ -117,10 +117,19 @@ client.on('message', async (msg) => {
     const sender = msg.author || msg.from;
     const content = msg.body.trim();
     const timestamp = new Date(msg.timestamp * 1000);
-    
-    // Konversi ke UTC+8 (WITA)
+
+    // Konversi ke WITA (UTC+8)
     const witaTime = new Date(timestamp.getTime() + (8 * 60 * 60 * 1000));
-    const formattedTime = witaTime.toISOString().replace('T', ' ').split('.')[0];
+
+    // Format jadi MM/DD/YYYY HH:mm:ss
+    const mm = String(witaTime.getMonth() + 1).padStart(2, '0');
+    const dd = String(witaTime.getDate()).padStart(2, '0');
+    const yyyy = witaTime.getFullYear();
+    const hh = String(witaTime.getHours()).padStart(2, '0');
+    const min = String(witaTime.getMinutes()).padStart(2, '0');
+    const ss = String(witaTime.getSeconds()).padStart(2, '0');
+
+    const formattedTime = `${mm}/${dd}/${yyyy} ${hh}:${min}:${ss}`;
 
 
     console.log(`📥 Pesan dari ${sender} di grup ${chat.name}: "${content}"`);
