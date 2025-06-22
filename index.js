@@ -108,11 +108,14 @@ client.on('message', async (msg) => {
 
     const senderId = msg.author || msg.from;
     const contact = await msg.getContact();
-    const senderName = contact.pushname || contact.name || senderId;
+    let senderName = contact.pushname || contact.name || senderId;
 
     // 🔒 Override nama untuk user tertentu
     if (senderId === '6285212540122@c.us') {
       senderName = 'DHARMA';
+    } else {
+      const contact = await msg.getContact();
+      senderName = contact?.pushname?.toUpperCase() || senderId.toUpperCase();
     }
 
     // Ubah jadi huruf kapital semua
