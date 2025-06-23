@@ -103,7 +103,50 @@ client.on('message', async (msg) => {
     // 🔒 Override nama untuk user tertentu
     const senderOverrides = {
       '6285212540122@c.us': 'DHARMA',
-      '6282353086174@c.us': 'DOMAS'
+      '6282353086174@c.us': 'DOMAS',
+      '6287839258122@c.us': 'ARIF IRVANSYAH',
+      '6281288079200@c.us': 'HERMAWAN',
+      '6282298361954@c.us': 'DEDI HANDOYO',
+      '6285348761223@C.US': 'DZUAL',
+      '6282255025432@C.US': 'ECHO NUGRAHA',
+      '6281278861552@c.us': 'ERNA WATI',
+      '6282195204255@c.us': 'ABDUL RAHIM',
+      '6282285487744@c.us': 'JUHANDA',
+      '6282218595016@c.us': 'OCHA ALIENA',
+      '6282259255551@c.us': 'MAMAN',
+      '6285752196213@c.us': 'MEY',
+      '628115525414@c.us': 'YAYAN',
+      '6285155222109@c.us': 'AFRIDA',
+      '6285727812635@c.us': 'ATHA',
+      '628974441966@c.us': 'ANCA',
+      '6285228782260@c.us': 'RANNI',
+      '6281273878321@c.us': 'MEIDIAN',
+      '6281257160490@c.us': 'DASANA',
+      '6282260234011@c.us': 'RIDWAN',
+      '6281254005440@c.us': 'RONY',
+      '6281375281051@c.us': 'RAY',
+      '6281354839288@c.us': 'DEWI',
+      '6285893084048@c.us': 'RIYADI',
+      '6285751867540@c.us': 'SUTRISNO',
+      '6281345390650@c.us': 'ASMAN',
+      '6287819624638@c.us': 'ABU NIZAM',
+      '6282176086738@c.us': 'REZA WARDANA',
+      '6281266423834@c.us': 'HERU KURNIAWAN',
+      '6281345567102@c.us': 'DEWI',
+      '6281258756870@c.us': 'LATIF',
+      '6281214370316@c.us': 'MEYKI SANDRA',
+      '6281278659650@c.us': 'YADI',
+      '6285267667919@c.us': 'RENDI PUTRA',
+      '6281348498598@c.us': 'ICA',
+      '6281260070007@c.us': 'HAGA BANGUN',
+      '6281248305432@c.us': 'ROY TONA',
+      '6285277909966@c.us': 'RADA ALBARRA',
+      '628115576914@c.us': 'ANDHIKA',
+      '6281339779828@c.us': 'DIMAS DWI',
+      '6282157264121@c.us': 'BUDI SETYO',
+      '6283800792218@c.us': 'WILDAN FIRDAUS',
+      '6282152443014@c.us': 'ABDUL AZIS',
+      '62895702569361@c.us': 'REZA FAIZADIN'
     };
 
     let senderName;
@@ -150,7 +193,7 @@ client.on('message', async (msg) => {
       },
       {
         category: 'SETTING INTRANSIT PO',
-        keywords: ['setting','intransit','transit','po']
+        keywords: ['setting','intransit','transit','po','intransil']
       },
       {
         category: 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)',
