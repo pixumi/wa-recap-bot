@@ -190,7 +190,7 @@ client.on('message', async (msg) => {
           console.log('📝 Menulis data ke Google Spreadsheet...');
           await appendToSheetMulti({
             sheet2: [
-              activity,
+              data.activity || 'LAINNYA',
               (data.requesterName || data.requester).toUpperCase(),
               senderName,
               data.requestTime,
@@ -198,7 +198,7 @@ client.on('message', async (msg) => {
               'https://bit.ly/RESPONSE_TIME'
             ],
             sheet6: [
-              activity,
+              data.activity, || 'LAINNYA',
               (data.requesterName || data.requester).toUpperCase(),
               senderName,
               data.requestTime,
