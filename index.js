@@ -130,11 +130,14 @@ client.on('message', async (msg) => {
 
     console.log(`📥 Pesan dari ${senderName} di grup ${chat.name}: "${content}"`);
 
-    const isRecapRequest = activity !== 'LAINNYA';
-    const isDone = content.toLowerCase() === 'done';
 
-    let activity = 'LAINNYA';
     const text = content.toLowerCase();
+    let activity = 'LAINNYA';
+    
+    // Deteksi activity...
+    // lalu:
+    const isDone = content.toLowerCase() === 'done';
+    const isRecapRequest = activity !== 'LAINNYA';
 
     // ✅ Efisien & fleksibel: bisa mendeteksi kombinasi seperti 'maintainkan', 'rilisin', dll.
     const activityMap = [
