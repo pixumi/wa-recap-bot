@@ -51,27 +51,36 @@ async function appendToSheetMulti({ sheet2, sheet7 }) {
   try {
     const sheets = await getSheets();
 
-    // ====== Untuk KPI RESPON TIME (gunakan UPDATE, bukan APPEND) ======
+    // === Menulis ke KPI RESPON TIME (hanya jika D–H kosong) ===
     if (sheet2) {
-      // Ambil semua isi kolom D (penanda baris terisi)
       const res = await sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `'KPI RESPON TIME'!C:H`,
+        range: `'KPI RESPON TIME'!D:H`,
         majorDimension: 'ROWS',
       });
 
-      const lastRow = res.data.values ? res.data.values.length : 0;
-      const nextRow = lastRow + 1;
+      let targetRow = res.data.values?.length + 1 || 1;
 
+      // Cari baris pertama di mana D–H kosong semua (abaikan kolom C)
+      for (let i = 0; i < res.data.values.length; i++) {
+        const row = res.data.values[i];
+        const isEmptyDToH = !row || row.length < 5 || row.every(cell => !cell || cell.trim() === '');
+        if (isEmptyDToH) {
+          targetRow = i + 1; // karena baris Excel dimulai dari 1
+          break;
+        }
+      }
+
+      // Tulis C–H (override kolom C meskipun sudah terisi/dropdown)
       await sheets.spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
-        range: `'KPI RESPON TIME'!D${nextRow}:I${nextRow}`,
+        range: `'KPI RESPON TIME'!C${targetRow}:H${targetRow}`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: [sheet2] },
       });
     }
 
-    // ====== Untuk Log Bot WA (tetap pakai APPEND) ======
+    // === Menulis ke Log Bot WA tetap pakai append ===
     if (sheet7) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
@@ -80,10 +89,10 @@ async function appendToSheetMulti({ sheet2, sheet7 }) {
         resource: { values: [sheet7] },
       });
     }
-
   } catch (err) {
     console.error('❌ Gagal menulis ke multi-sheet:', err.message);
   }
 }
+
 
 module.exports = { appendToSheetMulti };
