@@ -51,7 +51,7 @@ async function appendToSheetMulti({ sheet2, sheet7 }) {
   try {
     const sheets = await getSheets();
 
-    // === Menulis ke KPI RESPON TIME (hanya jika D–H kosong) ===
+    // === KPI RESPON TIME: baca seluruh D–H, cari baris terakhir terisi, tulis ke C–H ===
     if (sheet2) {
       const res = await sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
@@ -59,40 +59,63 @@ async function appendToSheetMulti({ sheet2, sheet7 }) {
         majorDimension: 'ROWS',
       });
 
-      let targetRow = res.data.values?.length + 1 || 1;
+      const rows = res.data.values || [];
+      let lastFilledRow = 0;
 
-      // Cari baris pertama di mana D–H kosong semua (abaikan kolom C)
-      for (let i = 0; i < res.data.values.length; i++) {
-        const row = res.data.values[i];
-        const isEmptyDToH = !row || row.length < 5 || row.every(cell => !cell || cell.trim() === '');
-        if (isEmptyDToH) {
-          targetRow = i + 1; // karena baris Excel dimulai dari 1
+      for (let i = rows.length - 1; i >= 0; i--) {
+        const row = rows[i];
+        const hasData = row && row.some(cell => cell && cell.trim() !== '');
+        if (hasData) {
+          lastFilledRow = i + 1;
           break;
         }
       }
 
-      // Tulis C–H (override kolom C meskipun sudah terisi/dropdown)
+      const nextRow = lastFilledRow + 1;
+
       await sheets.spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
-        range: `'KPI RESPON TIME'!C${targetRow}:H${targetRow}`,
+        range: `'KPI RESPON TIME'!C${nextRow}:H${nextRow}`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: [sheet2] },
       });
     }
 
-    // === Menulis ke Log Bot WA tetap pakai append ===
+    // === LOG BOT WA: baca seluruh B–H, cari baris terakhir terisi, tulis ke B–H ===
     if (sheet7) {
-      await sheets.spreadsheets.values.append({
+      const resLog = await sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
         range: `'Log Bot WA'!B:H`,
+        majorDimension: 'ROWS',
+      });
+
+      const rowsLog = resLog.data.values || [];
+      let lastFilledRowLog = 0;
+
+      for (let i = rowsLog.length - 1; i >= 0; i--) {
+        const row = rowsLog[i];
+        const hasData = row && row.some(cell => cell && cell.trim() !== '');
+        if (hasData) {
+          lastFilledRowLog = i + 1;
+          break;
+        }
+      }
+
+      const nextRowLog = lastFilledRowLog + 1;
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `'Log Bot WA'!B${nextRowLog}:H${nextRowLog}`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: [sheet7] },
       });
     }
+
   } catch (err) {
     console.error('❌ Gagal menulis ke multi-sheet:', err.message);
   }
 }
+
 
 
 module.exports = { appendToSheetMulti };
