@@ -51,15 +51,27 @@ async function appendToSheetMulti({ sheet2, sheet7 }) {
   try {
     const sheets = await getSheets();
 
+    // ====== Untuk KPI RESPON TIME (gunakan UPDATE, bukan APPEND) ======
     if (sheet2) {
-      await sheets.spreadsheets.values.append({
+      // Ambil semua isi kolom D (penanda baris terisi)
+      const res = await sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: `'KPI RESPON TIME'!D:I`,
+        range: `'KPI RESPON TIME'!C:H`,
+        majorDimension: 'ROWS',
+      });
+
+      const lastRow = res.data.values ? res.data.values.length : 0;
+      const nextRow = lastRow + 1;
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `'KPI RESPON TIME'!D${nextRow}:I${nextRow}`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: [sheet2] },
       });
     }
 
+    // ====== Untuk Log Bot WA (tetap pakai APPEND) ======
     if (sheet7) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
@@ -68,6 +80,7 @@ async function appendToSheetMulti({ sheet2, sheet7 }) {
         resource: { values: [sheet7] },
       });
     }
+
   } catch (err) {
     console.error('❌ Gagal menulis ke multi-sheet:', err.message);
   }
