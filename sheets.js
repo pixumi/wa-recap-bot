@@ -54,7 +54,7 @@ async function appendToSheetMulti({ sheet2, sheet7 }) {
     if (sheet2) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: `'KPI RESPON TIME'!C:H`,
+        range: `'KPI RESPON TIME'!D:I`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: [sheet2] },
       });
