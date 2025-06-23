@@ -138,7 +138,7 @@ client.on('message', async (msg) => {
     const activityMap = [
       {
         category: 'MAINTAIN',
-        keywords: ['mainten','menten','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
+        keywords: ['mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
       },
       {
         category: 'BLOK/OPEN BLOCK',
