@@ -133,11 +133,6 @@ client.on('message', async (msg) => {
 
     const text = content.toLowerCase();
     let activity = 'LAINNYA';
-    
-    // Deteksi activity...
-    // lalu:
-    const isDone = content.toLowerCase() === 'done';
-    const isRecapRequest = activity !== 'LAINNYA';
 
     // ✅ Efisien & fleksibel: bisa mendeteksi kombinasi seperti 'maintainkan', 'rilisin', dll.
     const activityMap = [
@@ -170,6 +165,10 @@ client.on('message', async (msg) => {
         break;
       }
     }
+
+    // Deteksi activity..
+    const isDone = content.toLowerCase() === 'done';
+    const isRecapRequest = activity !== 'LAINNYA';
     
 
     // Filter pesan yang tidak termasuk recap atau done
