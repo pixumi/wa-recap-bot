@@ -208,7 +208,7 @@ client.on('message', async (msg) => {
               formattedTime,
               'https://bit.ly/RESPONSE_TIME'
             ],
-            sheet6: [
+            sheet7: [
               data.activity || 'LAINNYA',
               (data.requesterName || data.requester).toUpperCase(),
               senderName,

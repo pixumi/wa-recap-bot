@@ -54,18 +54,18 @@ async function appendToSheetMulti({ sheet2, sheet6 }) {
     if (sheet2) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: `Sheet2!C:H`,
+        range: `'KPI RESPON TIME'!C:H`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: [sheet2] },
       });
     }
 
-    if (sheet6) {
+    if (sheet7) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: `Sheet6!C:I`,
+        range: `'Log Bot WA'!C:H`,
         valueInputOption: 'USER_ENTERED',
-        resource: { values: [sheet6] },
+        resource: { values: [sheet7] },
       });
     }
   } catch (err) {
