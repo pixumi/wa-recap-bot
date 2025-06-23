@@ -145,25 +145,36 @@ client.on('message', async (msg) => {
     let activity = 'LAINNYA';
     const text = content.toLowerCase();
 
-    if (['mainten','menten','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
-      .some(k => new RegExp(k, 'i').test(text))) {
-      activity = 'MAINTAIN';
+    // ✅ Efisien & fleksibel: bisa mendeteksi kombinasi seperti 'maintainkan', 'rilisin', dll.
+    const activityMap = [
+      {
+        category: 'MAINTAIN',
+        keywords: ['mainten','menten','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
+      },
+      {
+        category: 'BLOK/OPEN BLOCK',
+        keywords: ['open','block','blok','unblock']
+      },
+      {
+        category: 'RELEASE/UNRELEASE PO',
+        keywords: ['realis','rilis','release','sto']
+      },
+      {
+        category: 'SETTING INTRANSIT PO',
+        keywords: ['setting','intransit','transit','po']
+      },
+      {
+        category: 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)',
+        keywords: ['mutasi','mutasikan','tf','transfer','mutasinya','tfkan','transferkan']
+      }
+    ];
 
-    } else if (['open','block','blok','unblock']
-      .some(k => new RegExp(k, 'i').test(text))) {
-      activity = 'BLOK/OPEN BLOCK';
-
-    } else if (['realis','rilis','release','sto']
-      .some(k => new RegExp(k, 'i').test(text))) {
-      activity = 'RELEASE/UNRELEASE PO';
-
-    } else if (['setting','intransit','transit','po']
-      .some(k => new RegExp(k, 'i').test(text))) {
-      activity = 'SETTING INTRANSIT PO';
-
-    } else if (['mutasi','mutasikan','tf','transfer','mutasinya','tfkan','transferkan']
-      .some(k => new RegExp(k, 'i').test(text))) {
-      activity = 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)';
+    for (const { category, keywords } of activityMap) {
+      const pattern = new RegExp(keywords.join('|'), 'i');
+      if (pattern.test(text)) {
+        activity = category;
+        break;
+      }
     }
     
 
