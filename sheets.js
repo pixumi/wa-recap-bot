@@ -47,7 +47,7 @@ async function getSheets() {
   return sheetsAPI;
 }
 
-async function appendToSheetMulti({ sheet2, sheet6 }) {
+async function appendToSheetMulti({ sheet2, sheet7 }) {
   try {
     const sheets = await getSheets();
 
