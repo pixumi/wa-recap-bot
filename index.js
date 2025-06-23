@@ -214,6 +214,7 @@ client.on('message', async (msg) => {
               senderName,
               data.requestTime,
               formattedTime,
+              'https://bit.ly/RESPONSE_TIME',
               data.requestContent
             ]
           });
