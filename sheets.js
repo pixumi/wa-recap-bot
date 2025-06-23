@@ -63,7 +63,7 @@ async function appendToSheetMulti({ sheet2, sheet6 }) {
     if (sheet7) {
       await sheets.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
-        range: `'Log Bot WA'!C:H`,
+        range: `'Log Bot WA'!B:H`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: [sheet7] },
       });
