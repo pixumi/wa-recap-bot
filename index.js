@@ -167,26 +167,24 @@ client.on('message', async (msg) => {
     }
 
     // Deteksi activity..
-    const isDone = content.toLowerCase() === 'done';
-    const isRecapRequest = activity !== 'LAINNYA';
-    
+    const allowedDoneSenders = ['6285212540122@c.us', '6282353086174@c.us'];
+    const blockedRequestSenders = allowedDoneSenders; // sama aja biar rapi
 
-    // Filter pesan yang tidak termasuk recap atau done
+    const isBlockedForRequest = blockedRequestSenders.includes(senderId);
+    const isDone = allowedDoneSenders.includes(senderId) && /\bdone\b/i.test(content.toLowerCase());
+    const isRecapRequest = !isBlockedForRequest && activity !== 'LAINNYA';
+
+    // Filter pesan yang tidak termasuk recap keyword atau done
     if (!isRecapRequest && !isDone) {
       console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
       return;
     }
 
-    // Batasan: hanya ID tertentu yang boleh kirim 'done'
-    const allowedDoneSenders = ['6285212540122@c.us', '6282353086174@c.us'];
-
-    if (isDone && !allowedDoneSenders.includes(senderId)) {
-      console.log(`❌ Pengirim ${senderId} tidak diizinkan mengirim 'done'. Diabaikan.`);
-      return;
-    }
-
+    // Opsional: log feedback done yang valid
     if (isDone) {
+      console.log(`🟢 Feedback done terdeteksi dari ${senderName}: "${content}"`);
       console.log('🔍 Mencari request belum selesai di Redis...');
+
       const keys = await redis.keys('recap:*');
       for (const key of keys) {
         const data = await redis.hgetall(key);
