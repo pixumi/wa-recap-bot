@@ -138,7 +138,7 @@ client.on('message', async (msg) => {
     const activityMap = [
       {
         category: 'MAINTAIN',
-        keywords: ['maibnten','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
+        keywords: ['sloc','storage location','maibnten','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
       },
       {
         category: 'BLOK/OPEN BLOCK',
@@ -146,7 +146,7 @@ client.on('message', async (msg) => {
       },
       {
         category: 'RELEASE/UNRELEASE PO',
-        keywords: ['realis','rilis','release','sto']
+        keywords: ['realis','rilis','release']
       },
       {
         category: 'SETTING INTRANSIT PO',
