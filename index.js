@@ -145,18 +145,27 @@ client.on('message', async (msg) => {
     let activity = 'LAINNYA';
     const text = content.toLowerCase();
 
-    if (['mainten','menten','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update'].some(k => text.includes(k))) {
+    if (['mainten','menten','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
+      .some(k => new RegExp(k, 'i').test(text))) {
       activity = 'MAINTAIN';
-    } else if (['open','block','blok','unblock'].some(k => text.includes(k))) {
-      activity = 'BLOK/OPEN BLOCK';
-    } else if (['realis','rilis','release','sto'].some(k => text.includes(k))) {
-      activity = 'RELEASE/UNRELEASE PO';
-    } else if (['setting','intransit','transit','po'].some(k => text.includes(k))) {
-      activity = 'SETTING INTRANSIT PO';
-    } else if (['mutasi','mutasikan','tf','transfer'].some(k => text.includes(k))) {
-      activity = 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)'; 
-    }
 
+    } else if (['open','block','blok','unblock']
+      .some(k => new RegExp(k, 'i').test(text))) {
+      activity = 'BLOK/OPEN BLOCK';
+
+    } else if (['realis','rilis','release','sto']
+      .some(k => new RegExp(k, 'i').test(text))) {
+      activity = 'RELEASE/UNRELEASE PO';
+
+    } else if (['setting','intransit','transit','po']
+      .some(k => new RegExp(k, 'i').test(text))) {
+      activity = 'SETTING INTRANSIT PO';
+
+    } else if (['mutasi','mutasikan','tf','transfer','mutasinya','tfkan','transferkan']
+      .some(k => new RegExp(k, 'i').test(text))) {
+      activity = 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)';
+    }
+    
 
     // Filter pesan yang tidak termasuk recap atau done
     if (!isRecapRequest && !isDone) {
