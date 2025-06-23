@@ -151,8 +151,10 @@ client.on('message', async (msg) => {
       activity = 'BLOK/OPEN BLOCK';
     } else if (['realis','rilis','release','sto'].some(k => text.includes(k))) {
       activity = 'RELEASE/UNRELEASE PO';
-    } else if (['setting','intransit','transit'].some(k => text.includes(k))) {
+    } else if (['setting','intransit','transit','po'].some(k => text.includes(k))) {
       activity = 'SETTING INTRANSIT PO';
+    } else if (['mutasi','mutasikan','tf','transfer'].some(k => text.includes(k))) {
+      activity = 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)'; 
     }
 
 
