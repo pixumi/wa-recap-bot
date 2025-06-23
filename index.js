@@ -170,7 +170,7 @@ client.on('message', async (msg) => {
     ];
 
     for (const { category, keywords } of activityMap) {
-      const pattern = new RegExp(keywords.join('|'), 'i');
+      const pattern = new RegExp(keywords.map(k => `\\b\\w*${k}\\w*\\b`).join('|'), 'i');
       if (pattern.test(text)) {
         activity = category;
         break;
