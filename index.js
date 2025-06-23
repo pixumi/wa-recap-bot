@@ -89,15 +89,6 @@ client.on('ready', async () => {
   console.log('\n📌 Pastikan ALLOWED_GROUP_ID sudah diatur di environment');
 });
 
-const recapKeywords = [
-  'mainten', 'menten', 'maintain', 'maintanance', 'maintannace', 'maintenance', 'maiantan',
-  'maintan', 'maintence', 'maintance', 'maintened', 'maintanace',
-  'open', 'block', 'blok', 'unblock', 'bin', 'update', 'realis', 'rilis', 'release', 'sto',
-  'intransit', 'transit'
-];
-
-const recapRegex = new RegExp(`\\b(${recapKeywords.join('|')})\\b`, 'i');
-
 client.on('message', async (msg) => {
   try {
     const chat = await msg.getChat();
@@ -139,7 +130,7 @@ client.on('message', async (msg) => {
 
     console.log(`📥 Pesan dari ${senderName} di grup ${chat.name}: "${content}"`);
 
-    const isRecapRequest = recapRegex.test(content);
+    const isRecapRequest = activity !== 'LAINNYA';
     const isDone = content.toLowerCase() === 'done';
 
     let activity = 'LAINNYA';
