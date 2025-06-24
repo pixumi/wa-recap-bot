@@ -1,15 +1,21 @@
-name: Scale Down to CPU 1x (19:00 WITA)
+name: Scale Down to CPU 1x (18:00 WITA)
 
 on:
   schedule:
-    - cron: '0 11 * * *'  # UTC 11:00 = WITA 19:00
+    - cron: '0 10 * * *'  # UTC 10:00 = WITA 18:00
   workflow_dispatch:
 
 jobs:
-  scale-down:
+  scale:
     runs-on: ubuntu-latest
     steps:
-      - name: Scale to shared-cpu-1x
-        run: flyctl scale vm shared-cpu-1x --memory 1024 --region sin --app wa-recap-bot
+      - name: Install flyctl
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          export PATH="$HOME/.fly/bin:$PATH"
+          echo "$HOME/.fly/bin" >> $GITHUB_PATH
+
+      - name: Scale up to shared-cpu-2x
+        run: flyctl scale vm shared-cpu-2x --memory 1024 --app wa-recap-bot
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
