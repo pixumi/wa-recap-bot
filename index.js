@@ -77,7 +77,7 @@ const client = new Client({
       '--single-process',
       '--disable-extensions',
       '--disable-infobars',
-      '--disablee-breakpad',
+      '--disable-breakpad',
       '--disable-background-timer-throttling',
       '--disable-component-extensions-with-background-pages',
       '--no-default-browser-check',
