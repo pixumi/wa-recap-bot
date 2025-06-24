@@ -2,7 +2,7 @@ name: Scale Up Bot (06:00 WITA)
 
 on:
   schedule:
-    - cron: '0 23 * * *'  # UTC 22:00 = 07:00 WITA
+    - cron: '0 23 * * *'  # UTC 23:00 = 07:00 WITA
   workflow_dispatch:      # bisa juga dijalankan manual
 
 jobs:
