@@ -270,7 +270,7 @@ client.on('message', async (msg) => {
       for (const key of keys) {
         const data = await redis.hgetall(key);
         if (!data.doneTime) {
-          console.log(`✅ Menandai request "${data.activity}" dari "${data.requesterNamupe}" sebagai selesai.`);
+          console.log(`✅ Menandai request "${data.activity}" dari "${data.requesterName}" sebagai selesai.`);
 
           await redis.hmset(key, {
             ...data,
