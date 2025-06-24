@@ -182,7 +182,8 @@ client.on('message', async (msg) => {
       '6282259578239@c.us': 'PERNANDA',
       '6282131982720@c.us': 'RIYAN',
       '6281321200906@c.us': 'FADLURRAHMAN',
-      '6283178537395@c.us': 'VIONA AGUSTIN'
+      '6283178537395@c.us': 'VIONA AGUSTIN',
+      '6282334623744@c.us': 'ADI KRIS'
     };
 
     let senderName;
@@ -268,7 +269,7 @@ client.on('message', async (msg) => {
       for (const key of keys) {
         const data = await redis.hgetall(key);
         if (!data.doneTime) {
-          console.log(`✅ Menandai request "${data.activity}" dari "${data.senderName}" sebagai selesai.`);
+          console.log(`✅ Menandai request "${data.activity}" dari "${data.requesterNamupe}" sebagai selesai.`);
 
           await redis.hmset(key, {
             ...data,
