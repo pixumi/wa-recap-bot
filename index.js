@@ -77,6 +77,17 @@ const client = new Client({
       '--single-process',
       '--disable-extensions',
       '--disable-infobars',
+      '--disablee-breakpad',
+      '--disable-background-timer-throttling',
+      '--disable-component-extensions-with-background-pages',
+      '--no-default-browser-check',
+      '--disable-notifications',
+      '--disable-background-networking',
+      '--disable-sync',
+      '--metrics-recording-only',
+      '--mute-audio',
+      '--disable-features=TranslateUI,NetworkService,OptimizationHints',
+      '--disable-background-accluded-windows',
       '--js-flags=--max-old-space-size=256'
     ],
     executablePath: process.env.CHROME_BIN || undefined
@@ -184,7 +195,8 @@ client.on('message', async (msg) => {
       '6281321200906@c.us': 'FADLURRAHMAN',
       '6283178537395@c.us': 'VIONA AGUSTIN',
       '6282334623744@c.us': 'ADI KRIS',
-      '6282298392742@c.us': 'BARRON'
+      '6282298392742@c.us': 'BARRON',
+      '6285755074240@c.us': 'DONI'
     };
 
     let senderName;
