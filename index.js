@@ -10,8 +10,8 @@ const { appendToSheetMulti } = require('./sheets');
 
   // Daftar target waktu restart dalam UTC [ [hour, minute], ... ]
   const targetsUTC = [
-    [23, 5], // 07:05 WITA
-    [10, 0],  // 18:05 WITA
+    [22, 30], // 05:30 WITA
+    [13, 0],  // 21:00 WITA
   ];
 
   // Cari waktu target terdekat
@@ -80,14 +80,12 @@ const client = new Client({
       '--disable-breakpad',
       '--disable-background-timer-throttling',
       '--no-default-browser-check',
-      '--disable-notifications',
       '--metrics-recording-only',
       '--mute-audio',
       '--disable-component-update',
       '--disable-domain-reliability',
       '--disable-client-side-phising-detection',
       '--disable-renderer-backgrounding',
-      '--disable-background-accluded-windows',
       '--js-flags=--max-old-space-size=256'
     ],
     executablePath: process.env.CHROME_BIN || undefined
@@ -269,16 +267,7 @@ client.on('message', async (msg) => {
 
     // Filter pesan yang tidak termasuk recap keyword atau done
     if (!isRecapRequest && !isDone) {
-      console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
-      return;
-    }
-
-    // Opsional: log feedback done yang valid
-    if (isDone) {
-      console.log(`🟢 Feedback done terdeteksi dari ${senderName}: "${content}"`);
-      console.log('🔍 Mencari request belum selesai di Redis...');
-
-      const keys = await redis.keys('recap:*');
+  const keys = await redis.keys('recap:*');
       for (const key of keys) {
         const data = await redis.hgetall(key);
         if (!data.doneTime) {
@@ -314,7 +303,16 @@ client.on('message', async (msg) => {
 
           console.log('✅ Berhasil tulis ke spreadsheet!');
           break;
-        }
+     console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
+      return;
+    }
+
+    // Opsional: log feedback done yang valid
+    if (isDone) {
+      console.log(`🟢 Feedback done terdeteksi dari ${senderName}: "${content}"`);
+      console.log('🔍 Mencari request belum selesai di Redis...');
+
+             }
       }
     } else {
       const key = `recap:${Date.now()}`;
