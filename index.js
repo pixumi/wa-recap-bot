@@ -4,21 +4,46 @@ const QRCode = require('qrcode');
 const Redis = require('ioredis');
 const { appendToSheetMulti } = require('./sheets');
 
-// === 🔁 AUTO RESTART SETIAP 00:30 WITA (UTC+8) ===
+// === 🔁 AUTO RESTART JAM 05:30 & 21:00 WITA (UTC+8) ===
 (function scheduleRestart() {
   const now = new Date();
-  const target = new Date(now);
-  target.setUTCHours(16, 30, 0, 0); // 00:30 WITA
-  if (now > target) target.setUTCDate(target.getUTCDate() + 1);
-  const msUntilRestart = target - now;
+
+  // Daftar target waktu restart dalam UTC [ [hour, minute], ... ]
+  const targetsUTC = [
+    [23, 5], // 07:05 WITA
+    [10, 0],  // 18:05 WITA
+  ];
+
+  // Cari waktu target terdekat
+  let nextRestart = null;
+  for (const [h, m] of targetsUTC) {
+    const t = new Date(now);
+    t.setUTCHours(h, m, 0, 0);
+    if (t > now) {
+      nextRestart = t;
+      break;
+    }
+  }
+
+  // Kalau semua waktu hari ini sudah lewat, ambil jadwal besok
+  if (!nextRestart) {
+    const [h, m] = targetsUTC[0];
+    nextRestart = new Date(now);
+    nextRestart.setUTCDate(now.getUTCDate() + 1);
+    nextRestart.setUTCHours(h, m, 0, 0);
+  }
+
+  const msUntilRestart = nextRestart - now;
   const jam = Math.floor(msUntilRestart / 3600000);
   const menit = Math.floor((msUntilRestart % 3600000) / 60000);
-  console.log(`⏳ Bot akan auto-restart dalam ${jam} jam ${menit} menit (target: ${target.toISOString()})`);
+  console.log(`⏳ Bot akan auto-restart dalam ${jam} jam ${menit} menit (target: ${nextRestart.toISOString()})`);
+
   setTimeout(() => {
-    console.log('♻️ Waktu restart harian (00:30 WITA) tercapai. Bot akan keluar...');
+    console.log('♻️ Waktu restart tercapai. Bot akan keluar...');
     process.exit(1);
   }, msUntilRestart);
 })();
+
 
 // === 📈 TRACKING MEMORY USAGE ===
 setInterval(() => {
