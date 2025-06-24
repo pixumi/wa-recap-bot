@@ -86,6 +86,10 @@ const client = new Client({
       '--disable-sync',
       '--metrics-recording-only',
       '--mute-audio',
+      '--disable-component-update',
+      '--disable-domain-reliability',
+      '--disable-client-side-phising-detection',
+      '--disable-renderer-backgrounding',
       '--disable-features=TranslateUI,NetworkService,OptimizationHints',
       '--disable-background-accluded-windows',
       '--js-flags=--max-old-space-size=256'
