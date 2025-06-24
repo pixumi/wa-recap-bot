@@ -176,10 +176,13 @@ client.on('message', async (msg) => {
       '6282138094042@c.us': 'RIZALDI',
       '6281299061460@c.us': 'MIRZA',
       '6281346813157@c.us': 'MUHAMMAD EKO',
-      '6281939614245@c-us': 'JIMMY',
+      '6281939614245@c.us': 'JIMMY',
       '6281549387469@c.us': 'JEPRI JULIANSYAH',
       '6287814722805@c.us': 'RUSYDI',
-      '6282259578239@c.us': 'PERNANDA'
+      '6282259578239@c.us': 'PERNANDA',
+      '6282131982720@c.us': 'RIYAN',
+      '6281321200906@c.us': 'FADLURRAHMAN',
+      '6283178537395@c.us': 'VIONA AGUSTIN'
     };
 
     let senderName;
