@@ -268,7 +268,7 @@ client.on('message', async (msg) => {
       for (const key of keys) {
         const data = await redis.hgetall(key);
         if (!data.doneTime) {
-          console.log(`✅ Menandai request "${data.activity}" dari "${data.requesterName}" sebagai selesai.`);
+          console.log(`✅ Menandai request "${data.activity}" dari "${data.senderName}" sebagai selesai.`);
 
           await redis.hmset(key, {
             ...data,
@@ -304,7 +304,7 @@ client.on('message', async (msg) => {
       }
     } else {
       const key = `recap:${Date.now()}`;
-      console.log(`📌 Menyimpan request ${ activity} dari ${requesterName} ke Redis`);
+      console.log(`📌 Menyimpan request ${activity} dari ${senderName} ke Redis`);
       await redis.hmset(key, {
         activity,
         requester: senderId,
