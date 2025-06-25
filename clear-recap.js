@@ -3,7 +3,7 @@ require('dotenv').config();
 const Redis = require('ioredis');
 
 // Pastikan REDIS_URL disiapkan di .env atau bisa langsung ditaruh di sini
-const redis = new Redis('process.env.REDIS_URL', {
+const redis = new Redis('rediss://default:your_token@your-endpoint.upstash.io:6379', {
   tls: {} // wajib untuk Upstash
 });
 
