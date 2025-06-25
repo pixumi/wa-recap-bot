@@ -195,7 +195,10 @@ client.on('message', async (msg) => {
       '6282334623744@c.us': 'ADI KRIS',
       '6282298392742@c.us': 'BARRON',
       '6285755074240@c.us': 'DONI',
-      '6281346290596@c.us': 'AMRIL'
+      '6281346290596@c.us': 'AMRIL',
+      '6285249564964@c.us': 'BUDI',
+      '6282250265734@c.us': 'FLORENSIUS SUBANDI',
+      '6281340459271@c.us': 'ANTY'
     };
 
     let senderName;
@@ -230,7 +233,7 @@ client.on('message', async (msg) => {
     const activityMap = [
       {
         category: 'MAINTAIN',
-        keywords: ['sloc','storage location','maibnten','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
+        keywords: ['sloc','storage location','maibnten','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
       },
       {
         category: 'BLOK/OPEN BLOCK',
@@ -266,71 +269,73 @@ client.on('message', async (msg) => {
     const isDone = allowedDoneSenders.includes(senderId) && /\bdone\b/i.test(content.toLowerCase());
     const isRecapRequest = !isBlockedForRequest && activity !== 'LAINNYA';
 
-    // Filter pesan yang tidak termasuk recap keyword atau done
-    if (!isRecapRequest && !isDone) {
+// 🔍 Proses done
+if (isDone) {
+  console.log(`🟢 Feedback done terdeteksi dari ${senderName}: "${content}"`);
+  console.log('🔍 Mencari request belum selesai di Redis...');
+
   const keys = await redis.keys('recap:*');
-      for (const key of keys) {
-        const data = await redis.hgetall(key);
-        if (!data.doneTime) {
-          console.log(`✅ Menandai request "${data.activity}" dari "${data.requesterName}" sebagai selesai.`);
+  for (const key of keys) {
+    const data = await redis.hgetall(key);
+    if (!data.doneTime) {
+      console.log(`✅ Menandai request "${data.activity}" dari "${data.requesterName}" sebagai selesai.`);
 
-          await redis.hmset(key, {
-            ...data,
-            doneTime: formattedTime,
-            progressBy: senderId,
-            progressByName: senderName
-          });
-
-          console.log('📝 Menulis data ke Google Spreadsheet...');
-          await appendToSheetMulti({
-            sheet2: [
-              data.activity || 'LAINNYA',
-              (data.requesterName || data.requester).toUpperCase(),
-              senderName,
-              data.requestTime,
-              formattedTime,
-              'https://bit.ly/RESPONSE_TIME'
-            ],
-            sheet7: [
-              data.activity || 'LAINNYA',
-              (data.requesterName || data.requester).toUpperCase(),
-              senderName,
-              data.requestTime,
-              formattedTime,
-              'https://bit.ly/RESPONSE_TIME',
-              data.requestContent
-            ]
-          });
-
-          console.log('✅ Berhasil tulis ke spreadsheet!');
-          break;
-     console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
-      return;
-    }
-
-    // Opsional: log feedback done yang valid
-    if (isDone) {
-      console.log(`🟢 Feedback done terdeteksi dari ${senderName}: "${content}"`);
-      console.log('🔍 Mencari request belum selesai di Redis...');
-
-             }
-      }
-    } else {
-      const key = `recap:${Date.now()}`;
-      console.log(`📌 Menyimpan request ${activity} dari ${senderName} ke Redis`);
       await redis.hmset(key, {
-        activity,
-        requester: senderId,
-        requesterName: senderName,
-        requestTime: formattedTime,
-        requestContent: content,
-        doneTime: '',
-        progressBy: '',
-        progressByName: ''
+        ...data,
+        doneTime: formattedTime,
+        progressBy: senderId,
+        progressByName: senderName
       });
-      await redis.expire(key, 172800);
-      console.log('🧠 Request berhasil disimpan sementara.');
+
+      console.log('📝 Menulis data ke Google Spreadsheet...');
+      await appendToSheetMulti({
+        sheet2: [
+          data.activity || 'LAINNYA',
+          (data.requesterName || data.requester).toUpperCase(),
+          senderName,
+          data.requestTime,
+          formattedTime,
+          'https://bit.ly/RESPONSE_TIME'
+        ],
+        sheet7: [
+          data.activity || 'LAINNYA',
+          (data.requesterName || data.requester).toUpperCase(),
+          senderName,
+          data.requestTime,
+          formattedTime,
+          'https://bit.ly/RESPONSE_TIME',
+          data.requestContent
+        ]
+      });
+
+      console.log('✅ Berhasil tulis ke spreadsheet!');
+      break;
     }
+  }
+
+  return; // ✅ Selesai proses done, keluar dari handler
+}
+
+// 🔍 Proses request biasa
+if (isRecapRequest) {
+  const key = `recap:${Date.now()}`;
+  console.log(`📌 Menyimpan request ${activity} dari ${senderName} ke Redis`);
+  await redis.hmset(key, {
+    activity,
+    requester: senderId,
+    requesterName: senderName,
+    requestTime: formattedTime,
+    requestContent: content,
+    doneTime: '',
+    progressBy: '',
+    progressByName: ''
+  });
+  await redis.expire(key, 172800);
+  console.log('🧠 Request berhasil disimpan sementara.');
+} else {
+  console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
+}
+
   } catch (err) {
     console.error('❌ Handler error:', err.message);
   }
