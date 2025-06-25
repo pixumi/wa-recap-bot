@@ -1,33 +1,37 @@
-app = "wa-recap-bot"
-primary_region = "sin"
+# fly.toml app configuration file generated for wa-recap-bot-ancient-breeze-2708 on 2025-06-25T13:12:39+08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'wa-recap-bot-ancient-breeze-2708'
+primary_region = 'sin'
 
 [experimental]
   auto_rollback = true
-  primary_region = "sin"
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [env]
-  NODE_ENV = "production"
-  PORT = "3000"
+  NODE_ENV = 'production'
+  PORT = '3000'
+
+[[mounts]]
+  source = 'wwebjs_data'
+  destination = '/app/.wwebjs_auth'
 
 [[services]]
+  protocol = 'tcp'
   internal_port = 3000
-  protocol = "tcp"
 
   [[services.ports]]
     port = 80
-    handlers = ["http"]
+    handlers = ['http']
 
   [[services.ports]]
     port = 443
-    handlers = ["tls", "http"]
+    handlers = ['tls', 'http']
 
-[mounts]
-  source = "wwebjs_data"
-  destination = "/app/.wwebjs_auth"
-
-[vm]
-  size = "shared-cpu-1x"
-  memory = 1024
+[[vm]]
+  size = 'shared-cpu-2x'
+  memory = '1024'
