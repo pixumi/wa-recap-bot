@@ -13,7 +13,6 @@ Bot otomatis untuk mencatat permintaan dan feedback dari grup WhatsApp ke dalam 
 - ✅ Mendeteksi pesan `request` dan `done`
 - ✅ Mencatat log recap ke Google Sheet secara otomatis
 - ✅ Tidak memerlukan interaksi manual setelah jalan
-- ✅ Ringan dan berjalan di lokal / server pribadi
 
 ---
 
