@@ -200,7 +200,10 @@ client.on('message', async (msg) => {
       '6282250265734@c.us': 'FLORENSIUS SUBANDI',
       '6281340459271@c.us': 'ANTY',
       '6282251503210@c.us': 'BIBIT SATRIONO',
-      '6282254168885@c.us': 'HENDRA'
+      '6282254168885@c.us': 'HENDRA',
+      '6288268345410@c.us': 'TITO',
+      '6285247113641@c.us': 'MOKO',
+      '6281267133663@c.us': 'AHMAD AZIS'
     };
 
     let senderName;
@@ -235,7 +238,7 @@ client.on('message', async (msg) => {
     const activityMap = [
       {
         category: 'MAINTAIN',
-        keywords: ['sloc','storage location','maibnten','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
+        keywords: ['sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
       },
       {
         category: 'BLOK/OPEN BLOCK',
