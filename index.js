@@ -207,7 +207,17 @@ client.on('message', async (msg) => {
       '6285822030750@c.us': 'SINANTO',
       '6285346179404@c.us': 'DEBYANTORO',
       '6281223121550@c.us': 'DINA',
-      '6285246669961@c.us': 'ARI FAUNDA'
+      '6285246669961@c.us': 'ARI FAUNDA',
+      '6285345612333@c.us': 'FAHMI',
+      '6285397065282@c.us': 'RENTHA PALAMPA',
+      '628115530970@c.us': 'DIMAS',
+      '628115576915@c.us': 'ANTON SARDONO',
+      '6285754006319@c.us': 'BENY ATTA',
+      '6282293075684@c.us': 'FARIKH',
+      '6282371476064@c.us': 'FAISAL',
+      '6285267153227@c.us': 'FANHAR',
+      '6285849174071@c.us': 'HARIADI',
+      '6282164883434@c.us': 'GUIL TARIGAN'
     };
 
     let senderName;
