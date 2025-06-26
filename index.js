@@ -238,7 +238,7 @@ client.on('message', async (msg) => {
     const activityMap = [
       {
         category: 'MAINTAIN',
-        keywords: ['sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
+        keywords: ['10000','found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
       },
       {
         category: 'BLOK/OPEN BLOCK',
@@ -246,11 +246,11 @@ client.on('message', async (msg) => {
       },
       {
         category: 'RELEASE/UNRELEASE PO',
-        keywords: ['realis','rilis','release']
+        keywords: ['realis','rilis','release','14000']
       },
       {
         category: 'SETTING INTRANSIT PO',
-        keywords: ['setting','intransit','transit','po','intransil']
+        keywords: ['setting','intransit','transit','po','intransil','1100']
       },
       {
         category: 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)',
