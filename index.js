@@ -203,7 +203,8 @@ client.on('message', async (msg) => {
       '6282254168885@c.us': 'HENDRA',
       '6288268345410@c.us': 'TITO',
       '6285247113641@c.us': 'MOKO',
-      '6281267133663@c.us': 'AHMAD AZIS'
+      '6281267133663@c.us': 'AHMAD AZIS',
+      '6285822030750@c.us': 'SINANTO'
     };
 
     let senderName;
