@@ -253,7 +253,7 @@ client.on('message', async (msg) => {
     const activityMap = [
       {
         category: 'MAINTAIN',
-        keywords: ['10000','found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','bin','update']
+        keywords: ['10000','50000','70000','40000','found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update']
       },
       {
         category: 'BLOK/OPEN BLOCK',
