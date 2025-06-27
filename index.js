@@ -268,10 +268,10 @@ async function handleMessage(msg) {
 
     // ✅ Optimized keyword detection
     const activityMap = [
-      { category: 'MAINTAIN', keywords: ['10000','50000','70000','40000','found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] },
+      { category: 'MAINTAIN', keywords: ['found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] },
       { category: 'BLOK/OPEN BLOCK', keywords: ['open','block','blok','unblock'] },
-      { category: 'RELEASE/UNRELEASE PO', keywords: ['realis','rilis','release','14000'] },
-      { category: 'SETTING INTRANSIT PO', keywords: ['setting','intransit','transit','po','intransil','1100'] },
+      { category: 'RELEASE/UNRELEASE PO', keywords: ['realis','rilis','release'] },
+      { category: 'SETTING INTRANSIT PO', keywords: ['setting','intransit','transit','po','intransil'] },
       { category: 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)', keywords: ['mutasi','mutasikan','tf','transfer','mutasinya','tfkan','transferkan'] }
     ];
 
