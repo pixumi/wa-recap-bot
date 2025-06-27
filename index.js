@@ -277,9 +277,16 @@ async function handleMessage(msg) {
       { category: 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)', keywords: ['mutasi','mutasikan','tf','transfer','mutasinya','tfkan','transferkan'] }
     ];
 
-    // Faster keyword matching
+    // Case-insensitive matching dengan regex + faster keyword matching
+    const normalizedText = text.replace(/\s+/g, ' ');  // Normalisasi spasi
     for (const { category, keywords } of activityMap) {
-      if (keywords.some(k => text.includes(k))) {
+      const found = keywords.some(k => {
+        // Buat regex dengan flag 'i' untuk case-insensitive
+        const pattern = new RegExp(`\\b${k}\\b`, 'i');
+        return pattern.test(normalizedText);
+      });
+      
+      if (found) {
         activity = category;
         break;
       }
