@@ -239,7 +239,9 @@ async function handleMessage(msg) {
       '6285267153227@c.us': 'FANHAR',
       '6285849174071@c.us': 'HARIADI',
       '6282164883434@c.us': 'GUIL TARIGAN',
-      '6285159814122@c.us': 'YOGA PUTRA'
+      '6285159814122@c.us': 'YOGA PUTRA',
+      '6282159280132@c.us': 'AULIA',
+      '6282184307675@c.us': 'YUNUS'
     };
 
     let senderName = senderOverrides[senderId] 
@@ -268,7 +270,7 @@ async function handleMessage(msg) {
 
     // ✅ Optimized keyword detection
     const activityMap = [
-      { category: 'MAINTAIN', keywords: ['found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] },
+      { category: 'MAINTAIN', keywords: ['PL04','found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] },
       { category: 'BLOK/OPEN BLOCK', keywords: ['open','block','blok','unblock'] },
       { category: 'RELEASE/UNRELEASE PO', keywords: ['realis','rilis','release'] },
       { category: 'SETTING INTRANSIT PO', keywords: ['setting','intransit','transit','po','intransil'] },
