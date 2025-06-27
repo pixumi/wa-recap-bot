@@ -242,7 +242,10 @@ async function handleMessage(msg) {
       '6285159814122@c.us': 'YOGA PUTRA',
       '6282159280132@c.us': 'AULIA',
       '6282184307675@c.us': 'YUNUS',
-      '6285602363506@c.us': 'HUSNI'
+      '6285602363506@c.us': 'HUSNI',
+      '6281333929644@c.us': 'TARBONI',
+      '6285348476393@c.us': 'OBERT'
+
     };
 
     let senderName = senderOverrides[senderId] 
