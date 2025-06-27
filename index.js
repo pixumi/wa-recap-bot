@@ -162,7 +162,7 @@ async function handleMessage(msg) {
       '6287839258122@c.us': 'ARIF IRVANSYAH',
       '6281288079200@c.us': 'HERMAWAN',
       '6282298361954@c.us': 'DEDI HANDOYO',
-      '6285348761223@c.us': 'DZUAL', // Fixed case
+      '6285348761223@c.us': 'DZUAL',
       '6282255025432@c.us': 'ECHO NUGRAHA',
       '6281278861552@c.us': 'ERNA WATI',
       '6282195204255@c.us': 'ABDUL RAHIM',
@@ -235,7 +235,7 @@ async function handleMessage(msg) {
       '628115576915@c.us': 'ANTON SARDONO',
       '6285754006319@c.us': 'BENY ATTA',
       '6282293075684@c.us': 'FARIKH',
-      '6282371476064@c.us': 'FAISAL', // Fixed consistency
+      '6282371476064@c.us': 'FAISAL',
       '6285267153227@c.us': 'FANHAR',
       '6285849174071@c.us': 'HARIADI',
       '6282164883434@c.us': 'GUIL TARIGAN',
@@ -268,21 +268,35 @@ async function handleMessage(msg) {
     const text = content.toLowerCase();
     let activity = 'LAINNYA';
 
-    // ✅ Optimized keyword detection
+    // ✅ FIXED CASE-INSENSITIVE KEYWORD DETECTION
     const activityMap = [
-      { category: 'MAINTAIN', keywords: ['PL04','found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] },
-      { category: 'BLOK/OPEN BLOCK', keywords: ['open','block','blok','unblock'] },
-      { category: 'RELEASE/UNRELEASE PO', keywords: ['realis','rilis','release'] },
-      { category: 'SETTING INTRANSIT PO', keywords: ['setting','intransit','transit','po','intransil'] },
-      { category: 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)', keywords: ['mutasi','mutasikan','tf','transfer','mutasinya','tfkan','transferkan'] }
+      { 
+        category: 'MAINTAIN', 
+        keywords: ['pl04','found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] 
+      },
+      { 
+        category: 'BLOK/OPEN BLOCK', 
+        keywords: ['open','block','blok','unblock'] 
+      },
+      { 
+        category: 'RELEASE/UNRELEASE PO', 
+        keywords: ['realis','rilis','release'] 
+      },
+      { 
+        category: 'SETTING INTRANSIT PO', 
+        keywords: ['setting','intransit','transit','po','intransil'] 
+      },
+      { 
+        category: 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)', 
+        keywords: ['mutasi','mutasikan','tf','transfer','mutasinya','tfkan','transferkan'] 
+      }
     ];
 
-    // Case-insensitive matching dengan regex + faster keyword matching
-    const normalizedText = text.replace(/\s+/g, ' ');  // Normalisasi spasi
+    // Enhanced case-insensitive matching with word boundaries
+    const normalizedText = text.replace(/\s+/g, ' ');  // Normalize spaces
     for (const { category, keywords } of activityMap) {
       const found = keywords.some(k => {
-        // Buat regex dengan flag 'i' untuk case-insensitive
-        const pattern = new RegExp(`\\b${k}\\b`, 'i');
+        const pattern = new RegExp(`\\b${k}\\b`, 'i');  // Case-insensitive word boundary
         return pattern.test(normalizedText);
       });
       
@@ -290,6 +304,11 @@ async function handleMessage(msg) {
         activity = category;
         break;
       }
+    }
+
+    // Log activity detection for debugging
+    if (activity !== 'LAINNYA') {
+      console.log(`🔍 Aktivitas terdeteksi: ${activity}`);
     }
 
     // Deteksi activity
