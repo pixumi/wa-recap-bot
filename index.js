@@ -44,7 +44,6 @@ const { appendToSheetMulti } = require('./sheets');
   }, msUntilRestart);
 })();
 
-
 // === 📈 TRACKING MEMORY USAGE ===
 setInterval(() => {
   const mem = process.memoryUsage();
@@ -123,7 +122,29 @@ client.on('ready', async () => {
   console.log('\n📌 Pastikan ALLOWED_GROUP_ID sudah diatur di environment');
 });
 
-client.on('message', async (msg) => {
+// === OPTIMIZED MESSAGE HANDLING ===
+const messageQueue = [];
+let isProcessing = false;
+
+async function processQueue() {
+  if (isProcessing || messageQueue.length === 0) return;
+  
+  isProcessing = true;
+  const { msg, resolve } = messageQueue.shift();
+  
+  try {
+    await handleMessage(msg);
+    resolve();
+  } catch (err) {
+    console.error('❌ Queue processing error:', err);
+    resolve(err);
+  } finally {
+    isProcessing = false;
+    processQueue();
+  }
+}
+
+async function handleMessage(msg) {
   try {
     const chat = await msg.getChat();
     if (!chat.isGroup) return;
@@ -134,15 +155,15 @@ client.on('message', async (msg) => {
     const senderId = msg.author || msg.from;
     const contact = await msg.getContact();
 
-    // 🔒 Override nama untuk user tertentu
+    // 🔒 Override nama untuk user tertentu (FIXED CASE CONSISTENCY)
     const senderOverrides = {
       '6285212540122@c.us': 'DHARMA',
       '6282353086174@c.us': 'DOMAS',
       '6287839258122@c.us': 'ARIF IRVANSYAH',
       '6281288079200@c.us': 'HERMAWAN',
       '6282298361954@c.us': 'DEDI HANDOYO',
-      '6285348761223@C.US': 'DZUAL',
-      '6282255025432@C.US': 'ECHO NUGRAHA',
+      '6285348761223@c.us': 'DZUAL', // Fixed case
+      '6282255025432@c.us': 'ECHO NUGRAHA',
       '6281278861552@c.us': 'ERNA WATI',
       '6282195204255@c.us': 'ABDUL RAHIM',
       '6282285487744@c.us': 'JUHANDA',
@@ -214,21 +235,18 @@ client.on('message', async (msg) => {
       '628115576915@c.us': 'ANTON SARDONO',
       '6285754006319@c.us': 'BENY ATTA',
       '6282293075684@c.us': 'FARIKH',
-      '6282371476064@c.us': 'FAISAL',
+      '6282371476064@c.us': 'FAISAL', // Fixed consistency
       '6285267153227@c.us': 'FANHAR',
       '6285849174071@c.us': 'HARIADI',
       '6282164883434@c.us': 'GUIL TARIGAN',
       '6285159814122@c.us': 'YOGA PUTRA'
     };
 
-    let senderName;
-    if (senderOverrides[senderId]) {
-      senderName = senderOverrides[senderId];
-    } else {
-      senderName = contact?.pushname?.toUpperCase() || senderId.toUpperCase();
-    }
+    let senderName = senderOverrides[senderId] 
+      || contact?.pushname?.toUpperCase() 
+      || senderId.toUpperCase();
 
-    senderName = senderName.toUpperCase();
+    console.log(`👤 Sender: ${senderName} (${senderId})`);
 
     const content = msg.body.trim();
     const timestamp = new Date(msg.timestamp * 1000);
@@ -245,120 +263,111 @@ client.on('message', async (msg) => {
 
     console.log(`📥 Pesan dari ${senderName} di grup ${chat.name}: "${content}"`);
 
-
     const text = content.toLowerCase();
     let activity = 'LAINNYA';
 
-    // ✅ Efisien & fleksibel: bisa mendeteksi kombinasi seperti 'maintainkan', 'rilisin', dll.
+    // ✅ Optimized keyword detection
     const activityMap = [
-      {
-        category: 'MAINTAIN',
-        keywords: ['10000','50000','70000','40000','found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update']
-      },
-      {
-        category: 'BLOK/OPEN BLOCK',
-        keywords: ['open','block','blok','unblock']
-      },
-      {
-        category: 'RELEASE/UNRELEASE PO',
-        keywords: ['realis','rilis','release','14000']
-      },
-      {
-        category: 'SETTING INTRANSIT PO',
-        keywords: ['setting','intransit','transit','po','intransil','1100']
-      },
-      {
-        category: 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)',
-        keywords: ['mutasi','mutasikan','tf','transfer','mutasinya','tfkan','transferkan']
-      }
+      { category: 'MAINTAIN', keywords: ['10000','50000','70000','40000','found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] },
+      { category: 'BLOK/OPEN BLOCK', keywords: ['open','block','blok','unblock'] },
+      { category: 'RELEASE/UNRELEASE PO', keywords: ['realis','rilis','release','14000'] },
+      { category: 'SETTING INTRANSIT PO', keywords: ['setting','intransit','transit','po','intransil','1100'] },
+      { category: 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)', keywords: ['mutasi','mutasikan','tf','transfer','mutasinya','tfkan','transferkan'] }
     ];
 
+    // Faster keyword matching
     for (const { category, keywords } of activityMap) {
-      const pattern = new RegExp(keywords.map(k => `\\b\\w*${k}\\w*\\b`).join('|'), 'i');
-      if (pattern.test(text)) {
+      if (keywords.some(k => text.includes(k))) {
         activity = category;
         break;
       }
     }
 
-    // Deteksi activity..
+    // Deteksi activity
     const allowedDoneSenders = ['6285212540122@c.us', '6282353086174@c.us'];
-    const blockedRequestSenders = allowedDoneSenders; // sama aja biar rapi
+    const isDone = allowedDoneSenders.includes(senderId) && /\bdone\b/i.test(text);
+    const isRecapRequest = activity !== 'LAINNYA' && !allowedDoneSenders.includes(senderId);
 
-    const isBlockedForRequest = blockedRequestSenders.includes(senderId);
-    const isDone = allowedDoneSenders.includes(senderId) && /\bdone\b/i.test(content.toLowerCase());
-    const isRecapRequest = !isBlockedForRequest && activity !== 'LAINNYA';
+    // 🔍 Proses done
+    if (isDone) {
+      console.log(`🟢 Feedback done terdeteksi dari ${senderName}: "${content}"`);
+      console.log('🔍 Mencari request belum selesai di Redis...');
 
-// 🔍 Proses done
-if (isDone) {
-  console.log(`🟢 Feedback done terdeteksi dari ${senderName}: "${content}"`);
-  console.log('🔍 Mencari request belum selesai di Redis...');
+      const keys = await redis.keys('recap:*');
+      // Prioritize oldest unfinished request
+      const sortedKeys = keys.sort((a, b) => parseInt(a.split(':')[1]) - parseInt(b.split(':')[1]));
 
-  const keys = await redis.keys('recap:*');
-  for (const key of keys) {
-    const data = await redis.hgetall(key);
-    if (!data.doneTime) {
-      console.log(`✅ Menandai request "${data.activity}" dari "${data.requesterName}" sebagai selesai.`);
+      for (const key of sortedKeys) {
+        const data = await redis.hgetall(key);
+        if (!data.doneTime) {
+          console.log(`✅ Menandai request "${data.activity}" dari "${data.requesterName}" sebagai selesai.`);
 
-      await redis.hmset(key, {
-        ...data,
-        doneTime: formattedTime,
-        progressBy: senderId,
-        progressByName: senderName
-      });
+          await redis.hmset(key, {
+            ...data,
+            doneTime: formattedTime,
+            progressBy: senderId,
+            progressByName: senderName
+          });
 
-      console.log('📝 Menulis data ke Google Spreadsheet...');
-      await appendToSheetMulti({
-        sheet2: [
-          data.activity || 'LAINNYA',
-          (data.requesterName || data.requester).toUpperCase(),
-          senderName,
-          data.requestTime,
-          formattedTime,
-          'https://bit.ly/RESPONSE_TIME'
-        ],
-        sheet7: [
-          data.activity || 'LAINNYA',
-          (data.requesterName || data.requester).toUpperCase(),
-          senderName,
-          data.requestTime,
-          formattedTime,
-          'https://bit.ly/RESPONSE_TIME',
-          data.requestContent
-        ]
-      });
+          console.log('📝 Menulis data ke Google Spreadsheet...');
+          await appendToSheetMulti({
+            sheet2: [
+              data.activity || 'LAINNYA',
+              (data.requesterName || data.requester).toUpperCase(),
+              senderName,
+              data.requestTime,
+              formattedTime,
+              'https://bit.ly/RESPONSE_TIME'
+            ],
+            sheet7: [
+              data.activity || 'LAINNYA',
+              (data.requesterName || data.requester).toUpperCase(),
+              senderName,
+              data.requestTime,
+              formattedTime,
+              'https://bit.ly/RESPONSE_TIME',
+              data.requestContent
+            ]
+          });
 
-      console.log('✅ Berhasil tulis ke spreadsheet!');
-      break;
+          console.log('✅ Berhasil tulis ke spreadsheet!');
+          break;
+        }
+      }
+      return;
     }
-  }
 
-  return; // ✅ Selesai proses done, keluar dari handler
-}
-
-// 🔍 Proses request biasa
-if (isRecapRequest) {
-  const key = `recap:${Date.now()}`;
-  console.log(`📌 Menyimpan request ${activity} dari ${senderName} ke Redis`);
-  await redis.hmset(key, {
-    activity,
-    requester: senderId,
-    requesterName: senderName,
-    requestTime: formattedTime,
-    requestContent: content,
-    doneTime: '',
-    progressBy: '',
-    progressByName: ''
-  });
-  await redis.expire(key, 172800);
-  console.log('🧠 Request berhasil disimpan sementara.');
-} else {
-  console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
-}
+    // 🔍 Proses request biasa
+    if (isRecapRequest) {
+      const key = `recap:${Date.now()}`;
+      console.log(`📌 Menyimpan request ${activity} dari ${senderName} ke Redis`);
+      await redis.hmset(key, {
+        activity,
+        requester: senderId,
+        requesterName: senderName,
+        requestTime: formattedTime,
+        requestContent: content,
+        doneTime: '',
+        progressBy: '',
+        progressByName: ''
+      });
+      await redis.expire(key, 172800);
+      console.log('🧠 Request berhasil disimpan sementara.');
+    } else {
+      console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
+    }
 
   } catch (err) {
     console.error('❌ Handler error:', err.message);
   }
+}
+
+// Queue-based message processing
+client.on('message', async (msg) => {
+  return new Promise((resolve) => {
+    messageQueue.push({ msg, resolve });
+    processQueue();
+  });
 });
 
 client.initialize().catch(err => {
