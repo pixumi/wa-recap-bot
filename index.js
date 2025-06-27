@@ -241,7 +241,8 @@ async function handleMessage(msg) {
       '6282164883434@c.us': 'GUIL TARIGAN',
       '6285159814122@c.us': 'YOGA PUTRA',
       '6282159280132@c.us': 'AULIA',
-      '6282184307675@c.us': 'YUNUS'
+      '6282184307675@c.us': 'YUNUS',
+      '6285602363506@c.us': 'HUSNI'
     };
 
     let senderName = senderOverrides[senderId] 
@@ -272,7 +273,7 @@ async function handleMessage(msg) {
     const activityMap = [
       { 
         category: 'MAINTAIN', 
-        keywords: ['pl04','found','sloc','storage location','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] 
+        keywords: ['pl04','found','sloc','storage location','maintaince','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] 
       },
       { 
         category: 'BLOK/OPEN BLOCK', 
