@@ -3,7 +3,7 @@
 // =================================================================
 // 👨‍💻 Author: Dharma
 // 🤖 Assistance: Kano
-// 📅 Version: 2.0 (Optimized & Refactored)
+// 📅 Version: 2.1 (Highly Responsive Edition)
 // =================================================================
 
 require('dotenv').config();
@@ -59,8 +59,11 @@ setInterval(() => {
 }, MEMORY_TRACK_INTERVAL_MS);
 
 // === 🔌 INISIALISASI KONEKSI REDIS ===
-console.log('🔌 Menghubungkan ke Redis server:', process.env.REDIS_URL);
-const redis = new Redis(process.env.REDIS_URL);
+// ✨ REVISI: Menambahkan opsi koneksi TLS secara otomatis untuk URL `rediss://`
+const redisUrl = process.env.REDIS_URL;
+const redisOptions = redisUrl && redisUrl.startsWith('rediss://') ? { tls: {} } : {};
+const redis = new Redis(redisUrl, redisOptions);
+console.log('🔌 Menghubungkan ke Redis server...');
 redis.on('error', (err) => console.error('❌ Redis Connection Error:', err));
 redis.on('connect', () => console.log('✅ Berhasil terhubung ke Redis.'));
 
@@ -100,10 +103,8 @@ client.on('qr', async (qr) => {
     lastQRGenerated = now;
     console.log('📲 Scan QR Code berikut di terminal atau buka Data URL di browser:');
     try {
-        // Untuk ditampilkan di browser
         const qrImageUrl = await QRCode.toDataURL(qr);
         console.log(qrImageUrl);
-        // Untuk ditampilkan di terminal
         QRCode.toString(qr, { type: 'terminal' }, (err, url) => {
             if (err) throw err;
             console.log(url);
@@ -147,11 +148,11 @@ async function processQueue() {
     } finally {
         isProcessing = false;
         resolve();
-        process.nextTick(processQueue); // Proses antrian berikutnya secara efisien
+        process.nextTick(processQueue);
     }
 }
 
-client.on('message', async (msg) => {
+client.on('message', (msg) => { // Dibuat non-async karena promise di-handle di dalam
     return new Promise((resolve) => {
         messageQueue.push({ msg, resolve });
         processQueue();
@@ -164,7 +165,6 @@ async function messageHandler(msg) {
         const chat = await msg.getChat();
         const allowedGroupId = process.env.ALLOWED_GROUP_ID;
 
-        // Filter: Hanya proses pesan dari grup yang diizinkan
         if (!chat.isGroup || !allowedGroupId || chat.id._serialized !== allowedGroupId) {
             return;
         }
@@ -173,27 +173,23 @@ async function messageHandler(msg) {
         const contact = await msg.getContact();
         const text = msg.body.trim().toLowerCase();
         
-        // Menentukan nama pengirim
         const senderName = senderOverrides[senderId] || contact?.pushname?.toUpperCase() || senderId;
 
         console.log(`\n📥 Pesan diterima dari ${senderName} (${senderId}) di grup ${chat.name}`);
         console.log(`   Konten: "${msg.body.trim()}"`);
 
-        // Cek jika ini pesan "done" dari user yang diizinkan
         const isDoneMessage = allowedDoneSenders.has(senderId) && /\bdone\b/i.test(text);
         if (isDoneMessage) {
             await processDoneMessage(msg, senderName, senderId);
             return;
         }
 
-        // Deteksi aktivitas dari pesan
         const activity = detectActivity(text);
         if (activity) {
             await processRequestMessage(msg, senderName, senderId, activity);
         } else {
             console.log('   ⚠️ Pesan diabaikan (bukan request/done yang valid).');
         }
-
     } catch (err) {
         console.error(`❌ Terjadi error pada message handler utama:`, err);
     }
@@ -201,11 +197,6 @@ async function messageHandler(msg) {
 
 // === 🛠️ FUNGSI-FUNGSI BANTU (HELPER FUNCTIONS) ===
 
-/**
- * Mendeteksi kategori aktivitas dari teks pesan menggunakan Regex.
- * @param {string} text - Konten pesan dalam format lowercase.
- * @returns {string|null} - Kategori aktivitas atau null jika tidak ditemukan.
- */
 function detectActivity(text) {
     for (const [category, regex] of activityRegexMap.entries()) {
         if (regex.test(text)) {
@@ -216,9 +207,6 @@ function detectActivity(text) {
     return null;
 }
 
-/**
- * Memproses pesan "request" baru dan menyimpannya ke Redis.
- */
 async function processRequestMessage(msg, senderName, senderId, activity) {
     console.log(`   📌 Menyimpan request "${activity}" dari ${senderName}.`);
     const timestamp = new Date(msg.timestamp * 1000);
@@ -237,7 +225,8 @@ async function processRequestMessage(msg, senderName, senderId, activity) {
     };
 
     try {
-        await redis.hmset(redisKey, requestData);
+        // ✨ REVISI: Menggunakan `hset` yang lebih modern daripada `hmset`
+        await redis.hset(redisKey, requestData);
         await redis.expire(redisKey, REDIS_KEY_EXPIRY_SECONDS);
         console.log(`   🧠 Request berhasil disimpan di Redis dengan key ${redisKey}.`);
     } catch (redisErr) {
@@ -245,9 +234,6 @@ async function processRequestMessage(msg, senderName, senderId, activity) {
     }
 }
 
-/**
- * Memproses pesan "done", mencari request tertua, dan mengirim ke Google Sheets.
- */
 async function processDoneMessage(msg, senderName, senderId) {
     console.log(`   🟢 Feedback "done" terdeteksi dari ${senderName}.`);
     const timestamp = new Date(msg.timestamp * 1000);
@@ -260,13 +246,11 @@ async function processDoneMessage(msg, senderName, senderId) {
             return;
         }
 
-        // Prioritaskan request tertua (berdasarkan timestamp di key)
         const sortedKeys = keys.sort((a, b) => parseInt(a.split(':')[1]) - parseInt(b.split(':')[1]));
 
         for (const key of sortedKeys) {
             const data = await redis.hgetall(key);
             
-            // Proses hanya jika request belum selesai (doneTime masih kosong)
             if (data && !data.doneTime) {
                 console.log(`   ✅ Menemukan request yang belum selesai: "${data.activity}" dari ${data.requesterName}.`);
                 
@@ -276,26 +260,32 @@ async function processDoneMessage(msg, senderName, senderId) {
                     progressByName: senderName
                 };
                 
-                await redis.hmset(key, updatedData);
+                await redis.hset(key, updatedData);
                 console.log('   💾 Data di Redis berhasil diupdate.');
 
-                await sendToGoogleSheets(data, updatedData);
+                // ✨ OPTIMISASI UTAMA: "Fire and Forget"
+                // Tugas menulis ke spreadsheet (yang lambat) dijalankan di latar belakang.
+                // Fungsi `processDoneMessage` tidak perlu menunggunya selesai,
+                // sehingga bisa langsung lanjut memproses pesan berikutnya di antrian.
+                console.log('   🚀 Menitipkan tugas penulisan ke Spreadsheet untuk dijalankan di background...');
+                sendToGoogleSheets(data, updatedData); // <-- Perhatikan, tidak ada `await` di sini!
+                
                 return; // Keluar dari loop setelah memproses satu request
             }
         }
         
         console.log('   ℹ️ Semua request yang tersimpan sudah ditandai selesai.');
-
     } catch (err) {
         console.error(`   ❌ Gagal memproses pesan "done":`, err);
     }
 }
 
 /**
- * Mengirim data yang sudah selesai ke Google Sheets.
+ * Mengirim data ke Google Sheets. Dijalankan sebagai proses background.
  */
 async function sendToGoogleSheets(originalData, updateData) {
-    console.log('   📝 Menulis data ke Google Spreadsheet...');
+    // ✨ REVISI: Log dipindahkan ke dalam fungsi ini agar lebih jelas.
+    console.log('   📝 (Background) Memulai penulisan data ke Google Spreadsheet...');
     try {
         const sheetPayload = {
             sheet2: [
@@ -304,7 +294,7 @@ async function sendToGoogleSheets(originalData, updateData) {
                 updateData.progressByName,
                 originalData.requestTime,
                 updateData.doneTime,
-                'https://bit.ly/RESPONSE_TIME' // Asumsi link ini statis
+                'https://bit.ly/RESPONSE_TIME'
             ],
             sheet7: [
                 originalData.activity,
@@ -317,18 +307,13 @@ async function sendToGoogleSheets(originalData, updateData) {
             ]
         };
         await appendToSheetMulti(sheetPayload);
-        console.log('   ✅ Berhasil menulis ke Google Spreadsheet!');
+        console.log(`   ✅ (Background) Berhasil menulis request "${originalData.activity}" ke Spreadsheet!`);
     } catch (sheetErr) {
-        console.error('   ❌ Gagal menulis ke Google Spreadsheet:', sheetErr);
-        // Pertimbangkan untuk menambahkan logika retry atau notifikasi kegagalan di sini
+        // Karena ini berjalan di background, errornya hanya kita catat dan tidak menghentikan aplikasi.
+        console.error(`   ❌ (Background) Gagal menulis request "${originalData.activity}" ke Spreadsheet:`, sheetErr);
     }
 }
 
-/**
- * Mengonversi objek Date ke string waktu WITA (UTC+8).
- * @param {Date} dateObj - Objek Date.
- * @returns {string} - Waktu dalam format MM/DD/YYYY HH:mm:ss.
- */
 function getWitaTimeString(dateObj) {
     const witaOffset = 8 * 60 * 60 * 1000;
     const witaTime = new Date(dateObj.getTime() + witaOffset);
