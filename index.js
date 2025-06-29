@@ -285,7 +285,7 @@ async function handleMessage(msg) {
       },
       { 
         category: 'RELEASE/UNRELEASE PO', 
-        keywords: ['realis','rilis','release'] 
+        keywords: ['realis','rilis','release','sto'] 
       },
       { 
         category: 'SETTING INTRANSIT PO', 
