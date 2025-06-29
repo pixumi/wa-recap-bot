@@ -276,7 +276,7 @@ async function handleMessage(msg) {
     const activityMap = [
       { 
         category: 'MAINTAIN', 
-        keywords: ['pl04','found','sloc','storage location','maintaince','maibnten','mantain','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] 
+        keywords: ['pl04','found','sloc','storage location','maintaince','maibnten','mantain','mentenance','maintenenkn','mentenace','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] 
       },
       { 
         category: 'BLOK/OPEN BLOCK', 
