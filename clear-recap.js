@@ -3,15 +3,15 @@
 // =================================================================
 // Deskripsi: Script ini akan mencari dan menghapus semua key
 //            di Redis yang cocok dengan pola 'recap:*'.
-//            Script ini dilengkapi konfirmasi untuk mencegah
-//            penghapusan data yang tidak disengaja.
+//            Script ini dirancang untuk berjalan di environment
+//            seperti Fly.io, di mana koneksi string Redis
+//            disimpan sebagai secret environment variable.
 //
 // Cara Pakai:
-// 1. Pastikan file .env sudah berisi REDIS_URL yang benar.
+// 1. Pastikan secret `REDIS_URL` sudah diatur di environment Fly.io.
 // 2. Jalankan dari terminal: node cleanRecap.js
 // =================================================================
 
-require('dotenv').config();
 const Redis = require('ioredis');
 const readline = require('readline');
 
@@ -31,14 +31,15 @@ const askQuestion = (query) => {
 async function main() {
   console.log('🧹 Memulai script pembersih key Redis...');
 
+  // ✨ REVISI: Langsung membaca dari environment variable/secret, tanpa .env
   const redisUrl = process.env.REDIS_URL;
   if (!redisUrl) {
-    console.error('❌ Error: REDIS_URL tidak ditemukan di file .env');
-    console.error('   Pastikan file .env ada dan berisi baris: REDIS_URL=redis://...');
+    console.error('❌ Error: Environment variable REDIS_URL tidak ditemukan.');
+    console.error('   Pastikan secret bernama REDIS_URL sudah diatur di environment hosting Anda (misal: Fly.io).');
     return;
   }
 
-  // Opsi koneksi, menambahkan TLS jika URL menggunakan `rediss://` (seperti Upstash)
+  // Opsi koneksi, menambahkan TLS jika URL menggunakan `rediss://` (seperti Upstash/Fly.io Redis)
   const connectionOptions = redisUrl.startsWith('rediss://') ? { tls: {} } : {};
 
   const redis = new Redis(redisUrl, connectionOptions);
