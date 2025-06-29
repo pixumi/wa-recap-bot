@@ -244,7 +244,8 @@ async function handleMessage(msg) {
       '6282184307675@c.us': 'YUNUS',
       '6285602363506@c.us': 'HUSNI',
       '6281333929644@c.us': 'TARBONI',
-      '6285348476393@c.us': 'OBERT'
+      '6285348476393@c.us': 'OBERT',
+      '6281354832816@c.us': 'ANDI YUSUF'
 
     };
 
