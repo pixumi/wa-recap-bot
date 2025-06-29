@@ -54,6 +54,11 @@ setInterval(() => {
 console.log('🔌 Connecting to Redis:', process.env.REDIS_URL);
 const redis = new Redis(process.env.REDIS_URL);
 
+// Redis error handling
+redis.on('error', (err) => {
+  console.error('❌ Redis Error:', err);
+});
+
 // === Auth Path ===
 const dataPath = process.env.NODE_ENV === 'production'
   ? '/app/.wwebjs_auth'
@@ -144,19 +149,8 @@ async function processQueue() {
   }
 }
 
-async function handleMessage(msg) {
-  try {
-    const chat = await msg.getChat();
-    if (!chat.isGroup) return;
-
-    const allowedGroupId = process.env.ALLOWED_GROUP_ID;
-    if (chat.id._serialized !== allowedGroupId) return;
-
-    const senderId = msg.author || msg.from;
-    const contact = await msg.getContact();
-
-    // 🔒 Override nama untuk user tertentu (FIXED CASE CONSISTENCY)
-    const senderOverrides = {
+// 🔼 Moved constant data outside handler
+const senderOverrides = {
       '6285212540122@c.us': 'DHARMA',
       '6282353086174@c.us': 'DOMAS',
       '6287839258122@c.us': 'ARIF IRVANSYAH',
@@ -246,9 +240,49 @@ async function handleMessage(msg) {
       '6281333929644@c.us': 'TARBONI',
       '6285348476393@c.us': 'OBERT',
       '6281354832816@c.us': 'ANDI YUSUF'
+};
 
-    };
+const activityMap = [
+  { 
+    category: 'MAINTAIN', 
+    keywords: ['pl04','found','sloc','storage location','mainte','maintaince','maibnten','mantain','mentenance','maintenenkn','mentenace','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] 
+  },
+  { 
+    category: 'BLOK/OPEN BLOCK', 
+    keywords: ['open','block','blok','unblock'] 
+  },
+  { 
+    category: 'RELEASE/UNRELEASE PO', 
+    keywords: ['realis','rilis','release','sto'] 
+  },
+  { 
+    category: 'SETTING INTRANSIT PO', 
+    keywords: ['setting','intransit','transit','po','intransil'] 
+  },
+  { 
+    category: 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)', 
+    keywords: ['mutasi','mutasikan','tf','transfer','mutasinya','tfkan','transferkan'] 
+  }
+];
 
+// 🔼 Optimized allowed done senders lookup
+const allowedDoneSenders = new Set([
+  '6285212540122@c.us',
+  '6282353086174@c.us'
+]);
+
+async function handleMessage(msg) {
+  try {
+    const chat = await msg.getChat();
+    if (!chat.isGroup) return;
+
+    const allowedGroupId = process.env.ALLOWED_GROUP_ID;
+    if (chat.id._serialized !== allowedGroupId) return;
+
+    const senderId = msg.author || msg.from;
+    const contact = await msg.getContact();
+
+    // 🔒 Override nama untuk user tertentu (FIXED CASE CONSISTENCY)
     let senderName = senderOverrides[senderId] 
       || contact?.pushname?.toUpperCase() 
       || senderId.toUpperCase();
@@ -274,30 +308,6 @@ async function handleMessage(msg) {
     let activity = 'LAINNYA';
 
     // ✅ FIXED CASE-INSENSITIVE KEYWORD DETECTION
-    const activityMap = [
-      { 
-        category: 'MAINTAIN', 
-        keywords: ['pl04','found','sloc','storage location','mainte','maintaince','maibnten','mantain','mentenance','maintenenkn','mentenace','maintennace','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] 
-      },
-      { 
-        category: 'BLOK/OPEN BLOCK', 
-        keywords: ['open','block','blok','unblock'] 
-      },
-      { 
-        category: 'RELEASE/UNRELEASE PO', 
-        keywords: ['realis','rilis','release','sto'] 
-      },
-      { 
-        category: 'SETTING INTRANSIT PO', 
-        keywords: ['setting','intransit','transit','po','intransil'] 
-      },
-      { 
-        category: 'TRANSAKSI MIGO (GI,GR,TP & CANCELATION)', 
-        keywords: ['mutasi','mutasikan','tf','transfer','mutasinya','tfkan','transferkan'] 
-      }
-    ];
-
-    // Enhanced case-insensitive matching with word boundaries
     const normalizedText = text.replace(/\s+/g, ' ');  // Normalize spaces
     for (const { category, keywords } of activityMap) {
       const found = keywords.some(k => {
@@ -317,9 +327,8 @@ async function handleMessage(msg) {
     }
 
     // Deteksi activity
-    const allowedDoneSenders = ['6285212540122@c.us', '6282353086174@c.us'];
-    const isDone = allowedDoneSenders.includes(senderId) && /\bdone\b/i.test(text);
-    const isRecapRequest = activity !== 'LAINNYA' && !allowedDoneSenders.includes(senderId);
+    const isDone = allowedDoneSenders.has(senderId) && /\bdone\b/i.test(text);
+    const isRecapRequest = activity !== 'LAINNYA' && !allowedDoneSenders.has(senderId);
 
     // 🔍 Proses done
     if (isDone) {
@@ -343,27 +352,30 @@ async function handleMessage(msg) {
           });
 
           console.log('📝 Menulis data ke Google Spreadsheet...');
-          await appendToSheetMulti({
-            sheet2: [
-              data.activity || 'LAINNYA',
-              (data.requesterName || data.requester).toUpperCase(),
-              senderName,
-              data.requestTime,
-              formattedTime,
-              'https://bit.ly/RESPONSE_TIME'
-            ],
-            sheet7: [
-              data.activity || 'LAINNYA',
-              (data.requesterName || data.requester).toUpperCase(),
-              senderName,
-              data.requestTime,
-              formattedTime,
-              'https://bit.ly/RESPONSE_TIME',
-              data.requestContent
-            ]
-          });
-
-          console.log('✅ Berhasil tulis ke spreadsheet!');
+          try {
+            await appendToSheetMulti({
+              sheet2: [
+                data.activity || 'LAINNYA',
+                (data.requesterName || data.requester).toUpperCase(),
+                senderName,
+                data.requestTime,
+                formattedTime,
+                'https://bit.ly/RESPONSE_TIME'
+              ],
+              sheet7: [
+                data.activity || 'LAINNYA',
+                (data.requesterName || data.requester).toUpperCase(),
+                senderName,
+                data.requestTime,
+                formattedTime,
+                'https://bit.ly/RESPONSE_TIME',
+                data.requestContent
+              ]
+            });
+            console.log('✅ Berhasil tulis ke spreadsheet!');
+          } catch (sheetErr) {
+            console.error('❌ Gagal tulis ke spreadsheet:', sheetErr.message);
+          }
           break;
         }
       }
@@ -374,18 +386,22 @@ async function handleMessage(msg) {
     if (isRecapRequest) {
       const key = `recap:${Date.now()}`;
       console.log(`📌 Menyimpan request ${activity} dari ${senderName} ke Redis`);
-      await redis.hmset(key, {
-        activity,
-        requester: senderId,
-        requesterName: senderName,
-        requestTime: formattedTime,
-        requestContent: content,
-        doneTime: '',
-        progressBy: '',
-        progressByName: ''
-      });
-      await redis.expire(key, 172800);
-      console.log('🧠 Request berhasil disimpan sementara.');
+      try {
+        await redis.hmset(key, {
+          activity,
+          requester: senderId,
+          requesterName: senderName,
+          requestTime: formattedTime,
+          requestContent: content,
+          doneTime: '',
+          progressBy: '',
+          progressByName: ''
+        });
+        await redis.expire(key, 172800);
+        console.log('🧠 Request berhasil disimpan sementara.');
+      } catch (redisErr) {
+        console.error('❌ Gagal menyimpan ke Redis:', redisErr.message);
+      }
     } else {
       console.log('⚠️ Bukan recap keyword atau done, diabaikan.');
     }
@@ -401,6 +417,18 @@ client.on('message', async (msg) => {
     messageQueue.push({ msg, resolve });
     processQueue();
   });
+});
+
+// Graceful shutdown handler
+process.on('SIGINT', async () => {
+  console.log('🚪 Menerima SIGINT. Menutup koneksi...');
+  try {
+    await redis.quit();
+    console.log('✅ Redis connection closed');
+  } catch (err) {
+    console.error('❌ Gagal menutup Redis:', err);
+  }
+  process.exit(0);
 });
 
 client.initialize().catch(err => {
