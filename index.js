@@ -3,22 +3,26 @@
 // =================================================================
 // 👨‍💻 Author: Dharma
 // 🤖 Assistance: Kano
-// 📅 Version: 2.1 (Highly Responsive Edition)
+// 📅 Version: 2.2 (Robust Sheets Queue)
 // =================================================================
 
 require('dotenv').config();
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const QRCode = require('qrcode');
 const Redis = require('ioredis');
-const { appendToSheetMulti } = require('./sheets'); // Pastikan file ini ada dan berfungsi
-const { senderOverrides, activityRegexMap, allowedDoneSenders } = require('./config'); // ✨ Memuat konfigurasi dari file terpisah
+const { appendToSheetMulti } = require('./sheets');
+const { senderOverrides, activityRegexMap, allowedDoneSenders } = require('./config');
 
 // === ⚙️ KONSTANTA & KONFIGURASI APLIKASI ===
-const RESTART_SCHEDULES_UTC = [ { hour: 22, minute: 30 }, { hour: 13, minute: 0 } ]; // 05:30 & 21:00 WITA (UTC+8)
-const MEMORY_TRACK_INTERVAL_MS = 5 * 60 * 1000; // 5 menit
-const QR_COOLDOWN_MS = 60 * 1000; // 1 menit
+const RESTART_SCHEDULES_UTC = [ { hour: 22, minute: 30 }, { hour: 13, minute: 0 } ];
+const MEMORY_TRACK_INTERVAL_MS = 5 * 60 * 1000;
+const QR_COOLDOWN_MS = 60 * 1000;
 const REDIS_KEY_PREFIX = 'recap:';
-const REDIS_KEY_EXPIRY_SECONDS = 172800; // 48 jam
+const REDIS_KEY_EXPIRY_SECONDS = 172800;
+
+// ✨ SOLUSI: Membuat antrian khusus untuk tugas penulisan ke Google Sheets
+const sheetsQueue = [];
+let isProcessingSheets = false;
 
 // === 🔁 FUNGSI AUTO RESTART ===
 (function scheduleRestart() {
@@ -47,7 +51,7 @@ const REDIS_KEY_EXPIRY_SECONDS = 172800; // 48 jam
     console.log(`⏳ Bot akan auto-restart dalam ${hours} jam ${minutes} menit (target: ${nextRestart.toISOString()})`);
 
     setTimeout(() => {
-        console.log('♻️ Waktu restart tercapai. Bot akan keluar untuk di-restart oleh process manager (e.g., PM2, Heroku)...');
+        console.log('♻️ Waktu restart tercapai. Bot akan keluar untuk di-restart oleh process manager...');
         process.exit(1);
     }, msUntilRestart);
 })();
@@ -59,7 +63,6 @@ setInterval(() => {
 }, MEMORY_TRACK_INTERVAL_MS);
 
 // === 🔌 INISIALISASI KONEKSI REDIS ===
-// ✨ REVISI: Menambahkan opsi koneksi TLS secara otomatis untuk URL `rediss://`
 const redisUrl = process.env.REDIS_URL;
 const redisOptions = redisUrl && redisUrl.startsWith('rediss://') ? { tls: {} } : {};
 const redis = new Redis(redisUrl, redisOptions);
@@ -92,12 +95,12 @@ const client = new Client({
     }
 });
 
-// === 📲 EVENT HANDLER: QR CODE GENERATOR ===
+// === EVENT HANDLERS ===
 let lastQRGenerated = 0;
 client.on('qr', async (qr) => {
     const now = Date.now();
     if (now - lastQRGenerated < QR_COOLDOWN_MS) {
-        console.log('⏳ QR skipped: Masih dalam cooldown untuk mencegah spam.');
+        console.log('⏳ QR skipped: Masih dalam cooldown.');
         return;
     }
     lastQRGenerated = now;
@@ -114,7 +117,6 @@ client.on('qr', async (qr) => {
     }
 });
 
-// === ✅ EVENT HANDLER: CLIENT READY ===
 client.on('ready', async () => {
     console.log('✅ WhatsApp bot siap digunakan!');
     try {
@@ -125,13 +127,13 @@ client.on('ready', async () => {
                 console.log(`   - Grup: ${chat.name} | ID: ${chat.id._serialized}`);
             }
         });
-        console.log(`\n📌 Pastikan ALLOWED_GROUP_ID di .env sudah diatur ke salah satu ID di atas.`);
+        console.log(`\n📌 Pastikan ALLOWED_GROUP_ID di .env sudah diatur.`);
     } catch(err) {
         console.error('❌ Gagal mengambil daftar chat:', err);
     }
 });
 
-// === 📦 ANTRIAN PEMROSESAN PESAN (MESSAGE QUEUE) ===
+// === MESSAGE QUEUE & DISPATCHER ===
 const messageQueue = [];
 let isProcessing = false;
 
@@ -152,14 +154,13 @@ async function processQueue() {
     }
 }
 
-client.on('message', (msg) => { // Dibuat non-async karena promise di-handle di dalam
+client.on('message', (msg) => {
     return new Promise((resolve) => {
         messageQueue.push({ msg, resolve });
         processQueue();
     });
 });
 
-// === 🧠 HANDLER UTAMA (MESSAGE DISPATCHER) ===
 async function messageHandler(msg) {
     try {
         const chat = await msg.getChat();
@@ -195,7 +196,7 @@ async function messageHandler(msg) {
     }
 }
 
-// === 🛠️ FUNGSI-FUNGSI BANTU (HELPER FUNCTIONS) ===
+// === HELPER FUNCTIONS ===
 
 function detectActivity(text) {
     for (const [category, regex] of activityRegexMap.entries()) {
@@ -225,7 +226,6 @@ async function processRequestMessage(msg, senderName, senderId, activity) {
     };
 
     try {
-        // ✨ REVISI: Menggunakan `hset` yang lebih modern daripada `hmset`
         await redis.hset(redisKey, requestData);
         await redis.expire(redisKey, REDIS_KEY_EXPIRY_SECONDS);
         console.log(`   🧠 Request berhasil disimpan di Redis dengan key ${redisKey}.`);
@@ -263,14 +263,14 @@ async function processDoneMessage(msg, senderName, senderId) {
                 await redis.hset(key, updatedData);
                 console.log('   💾 Data di Redis berhasil diupdate.');
 
-                // ✨ OPTIMISASI UTAMA: "Fire and Forget"
-                // Tugas menulis ke spreadsheet (yang lambat) dijalankan di latar belakang.
-                // Fungsi `processDoneMessage` tidak perlu menunggunya selesai,
-                // sehingga bisa langsung lanjut memproses pesan berikutnya di antrian.
-                console.log('   🚀 Menitipkan tugas penulisan ke Spreadsheet untuk dijalankan di background...');
-                sendToGoogleSheets(data, updatedData); // <-- Perhatikan, tidak ada `await` di sini!
+                // ✨ REVISI: Bukan lagi "fire and forget", tapi memasukkan tugas ke antrian.
+                console.log('   ➡️ Menambahkan tugas penulisan ke antrian Spreadsheet...');
+                sheetsQueue.push({ originalData: data, updateData });
                 
-                return; // Keluar dari loop setelah memproses satu request
+                // Memicu prosesor antrian untuk berjalan.
+                processSheetsQueue();
+                
+                return;
             }
         }
         
@@ -280,12 +280,35 @@ async function processDoneMessage(msg, senderName, senderId) {
     }
 }
 
-/**
- * Mengirim data ke Google Sheets. Dijalankan sebagai proses background.
- */
+// ✨ FUNGSI BARU: "Asisten Dapur" yang memproses antrian Google Sheets satu per satu.
+async function processSheetsQueue() {
+    // Jika asisten sudah sibuk, jangan ganggu. Dia akan menyelesaikan tugasnya.
+    if (isProcessingSheets) return;
+
+    // Tandai bahwa asisten sekarang sibuk.
+    isProcessingSheets = true;
+    console.log(`   ▶️ Asisten Spreadsheet mulai bekerja. ${sheetsQueue.length} tugas di antrian.`);
+
+    // Terus bekerja selama masih ada tugas di antrian.
+    while (sheetsQueue.length > 0) {
+        // Ambil tugas paling depan.
+        const task = sheetsQueue.shift();
+        console.log(`   📝 Memproses tugas untuk request: "${task.originalData.activity}"...`);
+        try {
+            // Jalankan tugas sampai selesai (dengan await).
+            await sendToGoogleSheets(task.originalData, task.updateData);
+        } catch (err) {
+            // Jika ada error, catat, tapi jangan hentikan asisten.
+            console.error(`   ❌ Gagal memproses tugas Spreadsheet untuk "${task.originalData.activity}":`, err);
+        }
+    }
+    
+    // Setelah semua tugas selesai, asisten istirahat.
+    isProcessingSheets = false;
+    console.log('   ⏹️ Semua tugas Spreadsheet selesai. Asisten istirahat.');
+}
+
 async function sendToGoogleSheets(originalData, updateData) {
-    // ✨ REVISI: Log dipindahkan ke dalam fungsi ini agar lebih jelas.
-    console.log('   📝 (Background) Memulai penulisan data ke Google Spreadsheet...');
     try {
         const sheetPayload = {
             sheet2: [
@@ -307,10 +330,11 @@ async function sendToGoogleSheets(originalData, updateData) {
             ]
         };
         await appendToSheetMulti(sheetPayload);
-        console.log(`   ✅ (Background) Berhasil menulis request "${originalData.activity}" ke Spreadsheet!`);
+        console.log(`   ✅ Berhasil menulis request "${originalData.activity}" ke Spreadsheet!`);
     } catch (sheetErr) {
-        // Karena ini berjalan di background, errornya hanya kita catat dan tidak menghentikan aplikasi.
-        console.error(`   ❌ (Background) Gagal menulis request "${originalData.activity}" ke Spreadsheet:`, sheetErr);
+        console.error(`   ❌ Gagal saat menulis ke Spreadsheet:`, sheetErr.message);
+        // Melempar error agar bisa ditangkap oleh `processSheetsQueue`.
+        throw sheetErr;
     }
 }
 
