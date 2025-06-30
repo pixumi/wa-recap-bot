@@ -3,7 +3,7 @@
 // =================================================================
 // 👨‍💻 Author: Dharma
 // 🤖 Assistance: Kano
-// 📅 Version: 2.2 (Robust Sheets Queue)
+// 📅 Version: 2.3 (Typo Fix for Robust Queue)
 // =================================================================
 
 require('dotenv').config();
@@ -263,9 +263,9 @@ async function processDoneMessage(msg, senderName, senderId) {
                 await redis.hset(key, updatedData);
                 console.log('   💾 Data di Redis berhasil diupdate.');
 
-                // ✨ REVISI: Bukan lagi "fire and forget", tapi memasukkan tugas ke antrian.
+                // ✨ FIX: Memastikan nama variabel yang di-push ke queue sudah benar.
                 console.log('   ➡️ Menambahkan tugas penulisan ke antrian Spreadsheet...');
-                sheetsQueue.push({ originalData: data, updateData });
+                sheetsQueue.push({ originalData: data, updateData: updatedData });
                 
                 // Memicu prosesor antrian untuk berjalan.
                 processSheetsQueue();
@@ -299,7 +299,8 @@ async function processSheetsQueue() {
             await sendToGoogleSheets(task.originalData, task.updateData);
         } catch (err) {
             // Jika ada error, catat, tapi jangan hentikan asisten.
-            console.error(`   ❌ Gagal memproses tugas Spreadsheet untuk "${task.originalData.activity}":`, err);
+            // Kita tidak mau satu tugas yang gagal menghentikan semua tugas lainnya.
+            console.error(`   ❌ Gagal memproses tugas Spreadsheet untuk "${task.originalData.activity}":`, err.message);
         }
     }
     
@@ -332,8 +333,7 @@ async function sendToGoogleSheets(originalData, updateData) {
         await appendToSheetMulti(sheetPayload);
         console.log(`   ✅ Berhasil menulis request "${originalData.activity}" ke Spreadsheet!`);
     } catch (sheetErr) {
-        console.error(`   ❌ Gagal saat menulis ke Spreadsheet:`, sheetErr.message);
-        // Melempar error agar bisa ditangkap oleh `processSheetsQueue`.
+        // Melempar error agar bisa ditangkap dan dicatat oleh `processSheetsQueue`.
         throw sheetErr;
     }
 }
