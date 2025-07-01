@@ -98,7 +98,9 @@ const senderOverrides = {
     '6285348476393@c.us': 'OBERT',
     '6281354832816@c.us': 'ANDI YUSUF',
     '6289632360098@c.us': 'RAFI SYAEFULLOH',
-    '6281346671832@c.us': 'NOOR'
+    '6281346671832@c.us': 'NOOR',
+    '6281225398493@c.us': 'EZZY STEVEN',
+    '6281345413151@c.us': 'SANDRIAGA'
 };
 
 // === 🔑 PENGIRIM YANG DIIZINKAN MENGIRIM "DONE" ===
@@ -112,7 +114,7 @@ const allowedDoneSenders = new Set([
 const activityKeywords = [
   { 
     category: 'MAINTAIN', 
-    keywords: ['pl04','found','sloc','maintananc3','storage location','mainte','maintaince','maibnten','mantain','mentenance','maintenenkn','mentenace','maintennace','maintained','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] 
+    keywords: ['pl04','found','sloc','maintananc3','maintenace','storage location','mainte','maintaince','maibnten','mantain','mentenance','maintenenkn','mentenace','maintennace','maintained','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] 
   },
   { 
     category: 'BLOK/OPEN BLOCK', 
