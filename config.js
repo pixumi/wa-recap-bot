@@ -114,7 +114,7 @@ const allowedDoneSenders = new Set([
 const activityKeywords = [
   { 
     category: 'MAINTAIN', 
-    keywords: ['pl04','found','sloc','maintananc3','maintenace','storage location','mainte','maintaince','maibnten','mantain','mentenance','maintenenkn','mentenace','maintennace','maintained','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] 
+    keywords: ['pl04','found','sloc','maintananc3','maintenace','storage location','mainte','maintaince','maibnten','mantain','mentenance','maintenenkn','mentenace','maintennace','maintaine','maintained','maintece','mainten','menten','maintian','maintain','maintanance','maintannace','maintenance','maiantan','maintan','maintence','maintance','maintened','maintanace','maitnenacne','maintenacne','bin','update'] 
   },
   { 
     category: 'BLOK/OPEN BLOCK', 
