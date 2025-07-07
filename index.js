@@ -95,6 +95,19 @@ const client = new Client({
     }
 });
 
+// === PATCH: WITH RETRY UNTUK PUPPETEER ===
+async function withRetry(fn, retries = 3, delay = 1000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (err) {
+            console.warn(`⚠️ Percobaan ${i + 1} gagal:`, err.message);
+            if (i === retries - 1) throw err;
+            await new Promise(res => setTimeout(res, delay));
+        }
+    }
+}
+
 // === EVENT HANDLERS ===
 let lastQRGenerated = 0;
 client.on('qr', async (qr) => {
@@ -108,20 +121,9 @@ client.on('qr', async (qr) => {
     console.log('📲 QR Code berhasil dibuat!');
     
     try {
-        // 1. Membuat QR code sebagai Data URL (link gambar)
         const qrImageUrl = await QRCode.toDataURL(qr);
         console.log('🔗 Silakan copy-paste link di bawah ini ke browser Anda untuk scan QR Code:');
-        console.log(qrImageUrl); // Ini akan menampilkan link seperti "data:image/png;base64,iVBORw0KG..."
-
-        // 2. Menonaktifkan fungsi yang menampilkan QR di terminal
-        // Kode ini kita jadikan komentar agar tidak dieksekusi lagi.
-        /*
-        QRCode.toString(qr, { type: 'terminal' }, (err, url) => {
-            if (err) throw err;
-            console.log(url);
-        });
-        */
-
+        console.log(qrImageUrl);
     } catch (err) {
         console.error('❌ Gagal generate QR:', err.message);
     }
@@ -143,16 +145,14 @@ client.on('ready', async () => {
     }
 });
 
-// === MESSAGE QUEUE & DISPATCHER ===
 const messageQueue = [];
 let isProcessing = false;
 
 async function processQueue() {
     if (isProcessing || messageQueue.length === 0) return;
-    
     isProcessing = true;
     const { msg, resolve } = messageQueue.shift();
-    
+
     try {
         await messageHandler(msg);
     } catch (err) {
@@ -173,7 +173,7 @@ client.on('message', (msg) => {
 
 async function messageHandler(msg) {
     try {
-        const chat = await msg.getChat();
+        const chat = await withRetry(() => msg.getChat());
         const allowedGroupId = process.env.ALLOWED_GROUP_ID;
 
         if (!chat.isGroup || !allowedGroupId || chat.id._serialized !== allowedGroupId) {
@@ -181,9 +181,8 @@ async function messageHandler(msg) {
         }
 
         const senderId = msg.author || msg.from;
-        const contact = await msg.getContact();
+        const contact = await withRetry(() => msg.getContact());
         const text = msg.body.trim().toLowerCase();
-        
         const senderName = senderOverrides[senderId] || contact?.pushname?.toUpperCase() || senderId;
 
         console.log(`\n📥 Pesan diterima dari ${senderName} (${senderId}) di grup ${chat.name}`);
@@ -205,8 +204,6 @@ async function messageHandler(msg) {
         console.error(`❌ Terjadi error pada message handler utama:`, err);
     }
 }
-
-// === HELPER FUNCTIONS ===
 
 function detectActivity(text) {
     for (const [category, regex] of activityRegexMap.entries()) {
@@ -263,58 +260,44 @@ async function processDoneMessage(msg, senderName, senderId) {
             
             if (data && !data.doneTime) {
                 console.log(`   ✅ Menemukan request yang belum selesai: "${data.activity}" dari ${data.requesterName}.`);
-                
+
                 const updatedData = {
                     doneTime: doneFormattedTime,
                     progressBy: senderId,
                     progressByName: senderName
                 };
-                
+
                 await redis.hset(key, updatedData);
                 console.log('   💾 Data di Redis berhasil diupdate.');
 
-                // ✨ FIX: Memastikan nama variabel yang di-push ke queue sudah benar.
                 console.log('   ➡️ Menambahkan tugas penulisan ke antrian Spreadsheet...');
                 sheetsQueue.push({ originalData: data, updateData: updatedData });
-                
-                // Memicu prosesor antrian untuk berjalan.
                 processSheetsQueue();
-                
                 return;
             }
         }
-        
+
         console.log('   ℹ️ Semua request yang tersimpan sudah ditandai selesai.');
     } catch (err) {
         console.error(`   ❌ Gagal memproses pesan "done":`, err);
     }
 }
 
-// ✨ FUNGSI BARU: "Asisten Dapur" yang memproses antrian Google Sheets satu per satu.
 async function processSheetsQueue() {
-    // Jika asisten sudah sibuk, jangan ganggu. Dia akan menyelesaikan tugasnya.
     if (isProcessingSheets) return;
-
-    // Tandai bahwa asisten sekarang sibuk.
     isProcessingSheets = true;
     console.log(`   ▶️ Asisten Spreadsheet mulai bekerja. ${sheetsQueue.length} tugas di antrian.`);
 
-    // Terus bekerja selama masih ada tugas di antrian.
     while (sheetsQueue.length > 0) {
-        // Ambil tugas paling depan.
         const task = sheetsQueue.shift();
         console.log(`   📝 Memproses tugas untuk request: "${task.originalData.activity}"...`);
         try {
-            // Jalankan tugas sampai selesai (dengan await).
             await sendToGoogleSheets(task.originalData, task.updateData);
         } catch (err) {
-            // Jika ada error, catat, tapi jangan hentikan asisten.
-            // Kita tidak mau satu tugas yang gagal menghentikan semua tugas lainnya.
             console.error(`   ❌ Gagal memproses tugas Spreadsheet untuk "${task.originalData.activity}":`, err.message);
         }
     }
-    
-    // Setelah semua tugas selesai, asisten istirahat.
+
     isProcessingSheets = false;
     console.log('   ⏹️ Semua tugas Spreadsheet selesai. Asisten istirahat.');
 }
@@ -343,7 +326,7 @@ async function sendToGoogleSheets(originalData, updateData) {
         await appendToSheetMulti(sheetPayload);
         console.log(`   ✅ Berhasil menulis request "${originalData.activity}" ke Spreadsheet!`);
     } catch (sheetErr) {
-        // Melempar error agar bisa ditangkap dan dicatat oleh `processSheetsQueue`.
+         // Melempar error agar bisa ditangkap dan dicatat oleh `processSheetsQueue`.
         throw sheetErr;
     }
 }
@@ -351,7 +334,7 @@ async function sendToGoogleSheets(originalData, updateData) {
 function getWitaTimeString(dateObj) {
     const witaOffset = 8 * 60 * 60 * 1000;
     const witaTime = new Date(dateObj.getTime() + witaOffset);
-    
+
     const mm = String(witaTime.getUTCMonth() + 1).padStart(2, '0');
     const dd = String(witaTime.getUTCDate()).padStart(2, '0');
     const yyyy = witaTime.getUTCFullYear();
@@ -361,8 +344,6 @@ function getWitaTimeString(dateObj) {
 
     return `${mm}/${dd}/${yyyy} ${hh}:${min}:${ss}`;
 }
-
-
 // === 🚦 FUNGSI GRACEFUL SHUTDOWN ===
 process.on('SIGINT', async () => {
     console.log('\n🚪 Menerima sinyal SIGINT. Memulai proses shutdown...');
@@ -376,7 +357,6 @@ process.on('SIGINT', async () => {
     }
     process.exit(0);
 });
-
 // === ▶️ MULAI CLIENT ===
 client.initialize().catch(err => {
     console.error('❌ Gagal inisialisasi WhatsApp client:', err);
