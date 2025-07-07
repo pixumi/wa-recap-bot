@@ -20,8 +20,6 @@ const QR_COOLDOWN_MS = 60 * 1000;
 const REDIS_KEY_PREFIX = 'recap:';
 const REDIS_KEY_EXPIRY_SECONDS = 172800;
 
-console.log('🧾 Sheet ID aktif:', process.env.GOOGLE_SHEET_ID);
-
 // ✨ SOLUSI: Membuat antrian khusus untuk tugas penulisan ke Google Sheets
 const sheetsQueue = [];
 let isProcessingSheets = false;
@@ -145,6 +143,7 @@ client.on('ready', async () => {
     } catch(err) {
         console.error('❌ Gagal mengambil daftar chat:', err);
     }
+    console.log('🧾 Sheet ID aktif:', process.env.GOOGLE_SHEET_ID);
 });
 
 const messageQueue = [];
