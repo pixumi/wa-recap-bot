@@ -104,14 +104,24 @@ client.on('qr', async (qr) => {
         return;
     }
     lastQRGenerated = now;
-    console.log('📲 Scan QR Code berikut di terminal atau buka Data URL di browser:');
+    
+    console.log('📲 QR Code berhasil dibuat!');
+    
     try {
+        // 1. Membuat QR code sebagai Data URL (link gambar)
         const qrImageUrl = await QRCode.toDataURL(qr);
-        console.log(qrImageUrl);
+        console.log('🔗 Silakan copy-paste link di bawah ini ke browser Anda untuk scan QR Code:');
+        console.log(qrImageUrl); // Ini akan menampilkan link seperti "data:image/png;base64,iVBORw0KG..."
+
+        // 2. Menonaktifkan fungsi yang menampilkan QR di terminal
+        // Kode ini kita jadikan komentar agar tidak dieksekusi lagi.
+        /*
         QRCode.toString(qr, { type: 'terminal' }, (err, url) => {
             if (err) throw err;
             console.log(url);
         });
+        */
+
     } catch (err) {
         console.error('❌ Gagal generate QR:', err.message);
     }
