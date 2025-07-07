@@ -326,7 +326,7 @@ async function sendToGoogleSheets(originalData, updateData) {
         await appendToSheetMulti(sheetPayload);
         console.log(`   ✅ Berhasil menulis request "${originalData.activity}" ke Spreadsheet!`);
     } catch (sheetErr) {
-         // Melempar error agar bisa ditangkap dan dicatat oleh `processSheetsQueue`.
+        
         throw sheetErr;
     }
 }
@@ -357,7 +357,7 @@ process.on('SIGINT', async () => {
     }
     process.exit(0);
 });
-// === ▶️ MULAI CLIENT ===
+// === 🚦 FUNGSI GRACEFUL SHUTDOWN ===
 client.initialize().catch(err => {
     console.error('❌ Gagal inisialisasi WhatsApp client:', err);
     process.exit(1);
