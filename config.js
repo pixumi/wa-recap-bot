@@ -127,7 +127,7 @@ const activityKeywords = [
   },
   { 
     category: 'RELEASE/UNRELEASE PO', 
-    keywords: ['realis','rilis','release','sto'] 
+    keywords: ['realis','rilis','release','sto','riliskn','riliskan']
   },
   { 
     category: 'SETTING INTRANSIT PO', 
