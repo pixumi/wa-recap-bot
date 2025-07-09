@@ -105,7 +105,8 @@ const senderOverrides = {
     '6285798995869@c.us': 'YEDIDA EMETETHA',
     '6287831690837@c.us': 'CAHYO',
     '6282162311411@c.us': 'YUGUS',
-    '6285200014446@c.us': 'ACING'
+    '6285200014446@c.us': 'ACING',
+    '6282148133381@c.us': 'JUAN'
 };
 
 // === 🔑 PENGIRIM YANG DIIZINKAN MENGIRIM "DONE" ===
