@@ -341,7 +341,7 @@ function getWitaTimeString(dateObj) {
     const min = String(witaTime.getUTCMinutes()).padStart(2, '0');
     const ss = String(witaTime.getUTCSeconds()).padStart(2, '0');
 
-    return `${mm}/${dd}/${yyyy} ${hh}:${min}:${ss}`;
+    return `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
 }
 // === 🚦 FUNGSI GRACEFUL SHUTDOWN ===
 process.on('SIGINT', async () => {
