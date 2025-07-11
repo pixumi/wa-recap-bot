@@ -220,10 +220,13 @@ async function processRequestMessage(msg, senderName, senderId, activity) {
     const formattedTime = getWitaTimeString(timestamp);
     const redisKey = `${REDIS_KEY_PREFIX}${Date.now()}`;
 
+    // Pastikan senderName tidak undefined
+    const safeSenderName = senderName || "UNKNOWN_NAME";
+
     const requestData = {
         activity,
         requester: senderId,
-        requesterName: senderName,
+        requesterName: safeSenderName, // Gunakan yang sudah aman
         requestTime: formattedTime,
         requestContent: msg.body.trim(),
         doneTime: '',
@@ -257,7 +260,8 @@ async function processDoneMessage(msg, senderName, senderId) {
         for (const key of sortedKeys) {
             const data = await redis.hgetall(key);
             
-            if (data && !data.doneTime) {
+            // Perbaikan: Pastikan data ada dan memiliki requesterName
+            if (data && !data.doneTime && data.requesterName) {
                 console.log(`   ✅ Menemukan request yang belum selesai: "${data.activity}" dari ${data.requesterName}.`);
 
                 const updatedData = {
@@ -276,7 +280,7 @@ async function processDoneMessage(msg, senderName, senderId) {
             }
         }
 
-        console.log('   ℹ️ Semua request yang tersimpan sudah ditandai selesai.');
+        console.log('   ℹ️ Semua request yang tersimpan sudah ditandai selesai atau tidak valid.');
     } catch (err) {
         console.error(`   ❌ Gagal memproses pesan "done":`, err);
     }
@@ -303,19 +307,23 @@ async function processSheetsQueue() {
 
 async function sendToGoogleSheets(originalData, updateData) {
     try {
+        // Pastikan requesterName tidak undefined
+        const requesterName = originalData.requesterName || "UNKNOWN_REQUESTER";
+        const progressByName = updateData.progressByName || "UNKNOWN_PROGRESSOR";
+
         const sheetPayload = {
             sheet2: [
                 originalData.activity,
-                originalData.requesterName.toUpperCase(),
-                updateData.progressByName,
+                requesterName.toUpperCase(), // Aman karena sudah di-handle
+                progressByName,
                 originalData.requestTime,
                 updateData.doneTime,
                 'https://bit.ly/RESPONSE_TIME'
             ],
             sheet7: [
                 originalData.activity,
-                originalData.requesterName.toUpperCase(),
-                updateData.progressByName,
+                requesterName.toUpperCase(), // Aman karena sudah di-handle
+                progressByName,
                 originalData.requestTime,
                 updateData.doneTime,
                 'https://bit.ly/RESPONSE_TIME',
@@ -325,7 +333,6 @@ async function sendToGoogleSheets(originalData, updateData) {
         await appendToSheetMulti(sheetPayload);
         console.log(`   ✅ Berhasil menulis request "${originalData.activity}" ke Spreadsheet!`);
     } catch (sheetErr) {
-        
         throw sheetErr;
     }
 }
